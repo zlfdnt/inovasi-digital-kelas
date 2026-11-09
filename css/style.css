@@ -140,3 +140,45 @@ html.nocursor .stg:fullscreen button,html.nocursor .stg.pfs button,html.nocursor
 
 .sl .cd.tp{align-items:flex-start;text-align:left}.sl .cd.tp .num{margin-bottom:4px}
 .sl .cd.tp{justify-content:flex-start;padding-top:30px;gap:10px}.sl .cd.tp .num{font-size:44px}
+/* ===== v4: dinamis, modern, cepat (animasi hanya transform/opacity; hormati reduced-motion) ===== */
+:root{--ease:cubic-bezier(.2,.7,.2,1)}
+body{background:var(--bg)!important;background-attachment:scroll!important;isolation:isolate}
+body::before{content:'';position:fixed;inset:-25%;z-index:-1;pointer-events:none;background:radial-gradient(40% 35% at 20% 25%,#cfc4ff80,transparent 70%),radial-gradient(35% 30% at 80% 20%,#bdeed7a0,transparent 70%),radial-gradient(40% 35% at 70% 85%,#ffe2bd80,transparent 70%);animation:aurora 24s ease-in-out infinite alternate;will-change:transform}
+@keyframes aurora{to{transform:translate3d(4%,3%,0) scale(1.08) rotate(3deg)}}
+:focus-visible{outline:3px solid #7B5CF0;outline-offset:2px}
+.bootsk{position:fixed;inset:0 auto 0 0;width:260px;background:linear-gradient(170deg,#3b1db0,#7B5CF0)}
+/* skeleton shimmer */
+.sk{display:block;background:linear-gradient(100deg,#ece9fb 30%,#f8f6ff 50%,#ece9fb 70%);background-size:300% 100%;animation:shim 1.4s linear infinite;border-radius:14px;margin-bottom:12px}.grid .sk,.bento .sk{margin:0}
+@keyframes shim{to{background-position:-300% 0}}
+.qr:empty,.cv:empty{background:linear-gradient(100deg,#ece9fb 30%,#f8f6ff 50%,#ece9fb 70%);background-size:300% 100%;animation:shim 1.4s linear infinite}
+/* masuk halaman bertahap */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#body>:not(.sk){animation:rise .45s var(--ease) both}
+#body .grid>:not(.sk),#body .bento>:not(.sk),#body .thumbs>*{animation:rise .5s var(--ease) both}
+#body .grid>:nth-child(2),#body .bento>:nth-child(2){animation-delay:.06s}#body .grid>:nth-child(3){animation-delay:.12s}#body .grid>:nth-child(4){animation-delay:.18s}#body .grid>:nth-child(5){animation-delay:.24s}#body .grid>:nth-child(n+6){animation-delay:.3s}
+.nr>*,.nr .grid>*,.nr .bento>*{animation:none!important}
+/* tombol */
+.btn:active,.bb:active,.th:active,.tabs button:active,.jpb:active,.card.qa:active{transform:scale(.97)}
+.bb,.th,.tabs button,.jpb{position:relative;overflow:hidden;transition:transform .15s var(--ease),background .2s,border-color .2s}
+.btn.load{pointer-events:none}.btn.load::before{content:'';width:14px;height:14px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.btn.ok{background:linear-gradient(135deg,#00a86b,#2EC97A);animation:pop .4s var(--ease)}@keyframes pop{50%{transform:scale(1.06)}}
+.rp{position:absolute;border-radius:50%;background:#fff6;transform:scale(0);animation:rp .6s ease-out;pointer-events:none}@keyframes rp{to{transform:scale(1);opacity:0}}
+.btn.ghost .rp,.th .rp,.tabs button .rp,.jpb .rp{background:#5b3fd02e}
+/* kartu: angkat + miring 3D halus mengikuti kursor */
+.card.qa,.card.sc,.card.stat{transition:transform .25s var(--ease),box-shadow .25s}
+.card.qa:hover,.card.sc:hover,.card.stat:hover{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-4px);box-shadow:0 18px 40px #5b3fd02e}
+.card:hover{border-color:#cfc6f5}
+/* navigasi, header, hero */
+.side nav button svg{transition:transform .25s var(--ease)}.side nav button:hover svg{transform:scale(1.18) rotate(-6deg)}.side nav button.on svg{transform:scale(1.1)}
+.scr .top{box-shadow:0 8px 24px #1f22331a}
+.hero::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(380px circle at var(--mx,70%) var(--my,30%),#ffffff2e,transparent 60%)}
+.ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s var(--ease) .2s forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.donut{animation:rise .8s var(--ease) .2s both}
+/* ikon SVG menggantikan emoji */
+.slide span svg{width:56px;height:56px;stroke-width:1.4;color:#fff}.tag svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+.wa svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.thumbs{content-visibility:auto;contain-intrinsic-size:auto 160px}
+@media(pointer:coarse){.btn,.tabs button,.th,.bb,.jpb{min-height:44px}.btn.sm{padding:8px 16px}}
+@media(prefers-reduced-motion:reduce){.ln{stroke-dasharray:none;stroke-dashoffset:0}body::before{animation:none}}
+.side nav button{transition:background .2s,transform .2s,color .2s}
+.logo svg{width:26px;height:26px;color:#fff}

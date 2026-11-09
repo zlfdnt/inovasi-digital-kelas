@@ -91,3 +91,11 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - Slide diskalakan otomatis ke ukuran layar/proyektor (rasio 16:9). Di iPhone yang tidak mendukung layar penuh asli, dipakai mode layar penuh tiruan.
 - Narasi pemateri tetap hanya tampil untuk admin di bawah slide (tidak tampil saat layar penuh).
 - Teks slide diubah lewat `js/materi.js`.
+
+## J. Pembaruan: Ikon Interaktif, Tampilan Dinamis, dan Performa
+- **Ikon situs** (tab browser): lambang topi wisuda ungu di `img/favicon.svg`, plus ikon aplikasi (`icon-192/512.png`, `apple-touch-icon.png`) dan `manifest.webmanifest` sehingga situs bisa "Tambahkan ke layar utama". Ikon **interaktif**: muncul **titik hijau** saat ada sesi JP yang dibuka; bila tab Anda sedang di latar, ikon **berkedip** dan judul tab diawali "●".
+- **Micro-interaction:** riak pada tombol, efek tekan, spinner saat mengirim lalu "✓ Terkirim", kartu terangkat dan miring 3D halus mengikuti kursor, angka dashboard menghitung naik, garis grafik menggambar diri, ikon menu bergoyang saat disentuh.
+- **Skeleton shimmer** per halaman (beranda, dashboard, materi, sumber, tabel, formulir) dengan ukuran sama seperti konten asli agar layout tidak melompat.
+- **Cepat:** font dimuat tanpa memblokir tampilan; script `defer`; `preconnect` ke Google Apps Script; efek kursor hanya menggambar saat ada gerakan (hemat CPU/baterai); latar aurora memakai animasi transform saja; panggilan data publik dibatasi 8 detik dan di-prefetch saat menu disentuh; service worker menyimpan gambar (halaman, CSS, dan JS tetap selalu versi terbaru dari jaringan).
+- **Aksesibilitas:** cincin fokus keyboard, target sentuh minimal 44px di layar sentuh, dan semua animasi mati bila perangkat memakai "kurangi gerakan".
+- Setelah push, lakukan Ctrl+Shift+R sekali; service worker lama (jika ada) akan diganti otomatis.

@@ -17,9 +17,12 @@ async function api(action, data) {
   } catch (e) { return { success: false, message: 'Gagal terhubung ke server: ' + e.message }; }
 }
 let bootP = null, PRE = {};   // dedupe baca yang sedang berjalan + prefetch rekap
+let bootT = 0;
+function favSync() { window.setFav && setFav(Object.values((S && S.sesi) || {}).some(Boolean)); }
 function loadBoot() {
   if (bootP) return bootP;
-  bootP = api('boot').then(r => { bootP = null; if (r.success) { S = r.data; try { localStorage.setItem('bk_boot', JSON.stringify(r.data)); } catch (e) {} } return r.success; });
+  if (Date.now() - bootT < 8000 && S.sesi && Object.keys(S.sesi).length) return Promise.resolve(true);   // hindari panggilan berulang
+  bootP = api('boot').then(r => { bootP = null; if (r.success) { S = r.data; bootT = Date.now(); favSync(); try { localStorage.setItem('bk_boot', JSON.stringify(r.data)); } catch (e) {} } return r.success; });
   return bootP;
 }
 
@@ -37,15 +40,15 @@ const NAV_P = [['beranda', 'Beranda', 'home'], ['materi', 'Materi', 'slides'], [
 const NAV_A = [['dash', 'Dashboard', 'chart'], ['rekap', 'Rekap', 'folder'], ['kelola', 'Kelola', 'gear']];
 const TITLE = { beranda: 'Beranda', materi: 'Materi Presentasi', baik: 'Praktik Baik', absen: 'Absensi', refleksi: 'Refleksi', praktik: 'Lembar Praktik', sumber: 'Sumber Belajar', dash: 'Dashboard Admin', rekap: 'Rekap Data', kelola: 'Kelola Sumber Belajar' };
 function shell() {
-  $('#app').innerHTML = `<aside class="side"><div class="brand"><div class="logo">🎓</div><div><b>BOSKIN 2026</b><small>Guru Kreatif · Siswa Aktif</small></div></div><nav>${(me ? NAV_A.concat(NAV_P) : NAV_P).map(n => `<button data-v="${n[0]}">${ic(n[2])}<span>${n[1]}</span></button>`).join('')}</nav></aside><main id="main"></main>`;
-  $$('[data-v]').forEach(b => b.onclick = () => go(b.dataset.v));
+  $('#app').innerHTML = `<aside class="side"><div class="brand"><div class="logo">${ic('cap')}</div><div><b>BOSKIN 2026</b><small>Guru Kreatif · Siswa Aktif</small></div></div><nav>${(me ? NAV_A.concat(NAV_P) : NAV_P).map(n => `<button data-v="${n[0]}">${ic(n[2])}<span>${n[1]}</span></button>`).join('')}</nav></aside><main id="main"></main>`;
+  $$('[data-v]').forEach(b => { b.onclick = () => go(b.dataset.v); b.onpointerenter = () => { if (['beranda', 'absen', 'sumber'].includes(b.dataset.v)) loadBoot(); }; });
 }
 async function go(v) {
-  if (!V[v]) v = 'beranda'; view = v; history.replaceState(null, '', '#' + v);
+  if (!V[v]) v = 'beranda'; view = v; history.replaceState(null, '', '#' + v); document.title = TITLE[v] + ' · BOSKIN 2026'; favSync();
   $$('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  $('#main').innerHTML = `<div class="top"><div><h1>${TITLE[v]}</h1><small>Merajut digitalisasi pembelajaran tanpa batas</small></div>${me ? `<div><span class="tag">👤 ${esc(me.nama || me.email)}</span> <button class="btn ghost sm" id="out">Keluar</button></div>` : '<button class="btn glow sm" id="inAdm">Masuk Admin</button>'}</div><div id="body"><div class="skel"></div></div>`;
+  $('#main').innerHTML = `<div class="top"><div><h1>${TITLE[v]}</h1><small>Merajut digitalisasi pembelajaran tanpa batas</small></div>${me ? `<div><span class="tag">${ic('users')} ${esc(me.nama || me.email)}</span> <button class="btn ghost sm" id="out">Keluar</button></div>` : '<button class="btn glow sm" id="inAdm">Masuk Admin</button>'}</div><div id="body">${SK[v] || SK.form}</div>`;
   $('#out')?.addEventListener('click', () => logout()); $('#inAdm')?.addEventListener('click', loginModal);
-  await V[v]($('#body')); slider(); window.scrollTo(0, 0);
+  await V[v]($('#body')); slider(); countUp($('#body')); window.scrollTo(0, 0);
 }
 function logout(silent) { token = ''; me = null; localStorage.removeItem('bk_t'); localStorage.removeItem('bk_m'); if (!silent) toast('Anda telah keluar.'); shell(); go('beranda'); }
 function needLogin(b) { b.innerHTML = '<div class="card"><h2>Khusus admin</h2><p>Silakan masuk sebagai admin untuk membuka halaman ini.</p><button class="btn glow" id="nl">Masuk Admin</button></div>'; $('#nl', b).onclick = loginModal; }
@@ -76,16 +79,35 @@ function bindForm(f, action, msg, done, pre) {   // draf tersimpan di perangkat;
   try { Object.entries(JSON.parse(localStorage.getItem(k) || '{}')).forEach(([n, v]) => { const e = f.elements[n]; if (e && e.type !== 'checkbox' && e.type !== 'hidden' && e.type !== 'file') e.value = v; }); } catch (e) {}
   f.addEventListener('input', () => { const o = Object.fromEntries(new FormData(f)); delete o.setuju; delete o.sesi; delete o.file; localStorage.setItem(k, JSON.stringify(o)); });
   f.addEventListener('submit', async e => {
-    e.preventDefault(); const b = f.querySelector('button.btn'), t = b.textContent; b.disabled = true; b.textContent = 'Mengirim…';
-    let data = Object.fromEntries(new FormData(f)); try { if (pre) data = await pre(data); } catch (er) { b.disabled = false; b.textContent = t; return toast(er.message, 'err'); }
+    e.preventDefault(); const b = f.querySelector('button.btn'), t = b.textContent; b.disabled = true; b.classList.add('load'); b.textContent = 'Mengirim…';
+    let data = Object.fromEntries(new FormData(f)); try { if (pre) data = await pre(data); } catch (er) { b.disabled = false; b.classList.remove('load'); b.textContent = t; return toast(er.message, 'err'); }
     const r = await api(action, data);
-    b.disabled = false; b.textContent = r.success ? t : 'Kirim ulang';
+    b.disabled = false; b.classList.remove('load'); if (r.success) { b.textContent = '✓ Terkirim'; b.classList.add('ok'); setTimeout(() => { b.textContent = t; b.classList.remove('ok'); }, 1800); } else b.textContent = 'Kirim ulang';
     if (r.success) { toast(r.message || msg); localStorage.removeItem(k); f.reset(); done && done(r); } else toast(r.message || 'Gagal mengirim.', 'err');
   });
 }
 
 // ---------- Halaman peserta ----------
 const HERO = [['Guru Kreatif, Siswa Aktif', 'Merajut digitalisasi pembelajaran tanpa batas bersama BOSKIN 2026.', 'cap', 'g1'], ['Absensi per sesi JP', 'Catat kehadiran cepat dari ponsel — tanpa login, tanpa rekap manual.', 'check', 'g2'], ['Bagikan karya, tularkan inspirasi', 'Kumpulkan lembar praktik dan temukan sumber belajar lewat QR Code.', 'rocket', 'g3']];
+// ---------- Skeleton shimmer (ukuran sama dengan konten asli agar tidak menggeser layout) ----------
+const sk = (n, h) => Array.from({ length: n }, () => `<div class="sk" style="height:${h}px"></div>`).join('');
+const SK = {
+  beranda: `<div class="bento"><div class="sk" style="min-height:300px;border-radius:16px"></div><div class="sk" style="min-height:300px;border-radius:20px"></div></div><div class="grid" style="margin-bottom:20px">${sk(4, 150)}</div><div class="grid g2">${sk(2, 190)}</div>`,
+  dash: `<div class="grid" style="margin-bottom:20px">${sk(4, 150)}</div><div class="grid g2">${sk(2, 270)}</div>`,
+  materi: `<div class="sk" style="height:38px;width:min(100%,360px);margin-bottom:14px"></div><div class="sk" style="aspect-ratio:16/9;border-radius:20px"></div>`,
+  sumber: `<div class="grid g2">${sk(4, 330)}</div>`, baik: `${sk(1, 120)}${sk(1, 420)}`, tbl: `${sk(7, 46)}`,
+  form: `<div class="card">${sk(1, 26)}${sk(5, 46)}</div>`
+};
+SK.rekap = `<div class="card">${SK.tbl}</div>`; SK.kelola = SK.form; SK.absen = SK.refleksi = SK.praktik = SK.form;
+function countUp(r) {
+  if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  $$('[data-n]', r).forEach(el => {
+    const m = String(el.dataset.n).match(/^([\d.]+)(.*)$/); if (!m) return;
+    const to = parseFloat(m[1]), dec = (m[1].split('.')[1] || '').length, t0 = performance.now();
+    const f = t => { const k = Math.min((t - t0) / 800, 1); el.textContent = (to * (1 - Math.pow(1 - k, 3))).toFixed(dec) + m[2]; if (k < 1) requestAnimationFrame(f); };
+    requestAnimationFrame(f);
+  });
+}
 // ---------- Penyaji slide (mengikuti template BOSKIN: kanvas 1280×720) ----------
 const SLP = {
   hd: s => `<div class="hd"><img src="img/emblem.png" alt=""><div class="tt"><h2>${esc(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt=""></div>`,
@@ -108,7 +130,9 @@ function slideHTML(s) {
 const V = {
   async beranda(b) {
     const QA = [['absen', 'Absensi', 'check', 2, 'Pilih sesi JP lalu kirim presensi.'], ['refleksi', 'Refleksi', 'chat', 4, 'Tuliskan refleksi dan tindak lanjut.'], ['praktik', 'Lembar Praktik', 'doc', 3, 'Kumpulkan tautan atau berkas hasil praktik.'], ['sumber', 'Sumber Belajar', 'book', 1, 'Tautan karya, materi, dan QR Code.']];
+    let first = true;
     const draw = () => {
+      b.classList.toggle('nr', !first); first = false; favSync();
       const ss = S.sesi || {}, L = (S.sumber || []).slice(-3).reverse(), n = (window.MATERI || { slides: [] }).slides.length;
       b.innerHTML = `<div class="bento"><div class="hero b-hero"><div class="slides" data-ms="5500">${HERO.map(h => `<div class="slide ${h[3]}"><h1>${h[0]}</h1><p>${h[1]}</p><span class="em">${ic(h[2])}</span></div>`).join('')}</div>${dots(HERO.length)}<div class="hero-cta"><button class="btn glow" data-go="absen">Mulai Absen</button><button class="btn ghost" data-go="materi">Lihat Materi</button></div></div>
       <div class="card"><h2>Status Sesi Hari Ini</h2>${[1, 2, 3].map(k => `<div class="sw"><div><b>JP ${k}</b><br><small>${JP[k]} WIB</small></div><span class="pillst ${ss[k] ? 'on' : ''}">${ss[k] ? '● Dibuka' : 'Ditutup'}</span></div>`).join('')}</div></div>
@@ -118,7 +142,7 @@ const V = {
       $$('[data-go]', b).forEach(c => c.onclick = () => go(c.dataset.go)); slider();
     };
     let c = null; try { c = JSON.parse(localStorage.getItem('bk_boot') || 'null'); } catch (e) {}
-    if (c) { S = c; draw(); } else b.innerHTML = '<div class="skel"></div>';
+    if (c) { S = c; draw(); } else b.innerHTML = SK.beranda;
     const h0 = JSON.stringify(c); await loadBoot(); if (!c || JSON.stringify(S) !== h0) draw();
   },
   async absen(b) {
@@ -148,7 +172,7 @@ const V = {
     });
   },
   async sumber(b) {   // tampil instan dari cache perangkat, lalu segarkan di latar
-    const draw = () => { const L = S.sumber || []; b.innerHTML = L.length ? `<div class="grid g2">${L.map(cardSumber).join('')}</div>` : '<div class="card">Belum ada sumber belajar.</div>'; $$('.qr', b).forEach(q => window.QRCode && new QRCode(q, { text: q.dataset.u, width: 88, height: 88, colorDark: '#431fb8' })); slider(); };
+    let first = true; const draw = () => { b.classList.toggle('nr', !first); first = false; const L = S.sumber || []; b.innerHTML = L.length ? `<div class="grid g2">${L.map(cardSumber).join('')}</div>` : '<div class="card">Belum ada sumber belajar.</div>'; $$('.qr', b).forEach(q => window.QRCode && new QRCode(q, { text: q.dataset.u, width: 88, height: 88, colorDark: '#431fb8' })); slider(); };
     let c = null; try { c = JSON.parse(localStorage.getItem('bk_boot') || 'null'); } catch (e) {}
     if (c && c.sumber) { S = c; draw(); }
     const h0 = JSON.stringify(c && c.sumber); await loadBoot();
@@ -231,8 +255,8 @@ const V = {
     const X = [50, 180, 310], Y = v => 130 - v / mx * 100, pts = H.map((v, i) => X[i] + ',' + Y(v)).join(' ');
     const st = d.status, tot = Math.max(d.praktik, 1), C = { Baru: '#F5A23B', Ditinjau: '#3B82F6', Disetujui: '#2EC97A', Revisi: '#EF4444' };
     let a = 0; const cg = Object.keys(C).map(k => { const s = a; a += (st[k] || 0) / tot * 100; return `${C[k]} ${s}% ${a}%`; }).join(',');
-    b.innerHTML = `<div class="grid" style="margin-bottom:20px">${[['Total Peserta', d.peserta, 'users', 1], ['Hadir Hari Ini', pct + '%', 'check', 2], ['Refleksi Masuk', d.refleksi, 'chat', 4], ['Lembar Praktik', d.praktik, 'doc', 3]].map(s => `<div class="card stat"><span class="tile t${s[3]}">${ic(s[2])}</span><small class="lb">${s[0]}</small><b>${s[1]}</b></div>`).join('')}</div>
-    <div class="grid g2"><div class="card"><h2>Tren Kehadiran per Sesi JP</h2><svg viewBox="0 0 360 160" width="100%" role="img" aria-label="Grafik kehadiran"><line x1="30" x2="350" y1="${Y(P * .95)}" y2="${Y(P * .95)}" stroke="#2EC97A" stroke-dasharray="5 4"/><text x="352" y="${Y(P * .95) - 4}" font-size="9" fill="#2EC97A" text-anchor="end">Target 95%</text><polyline points="${pts}" fill="none" stroke="#5B3FD0" stroke-width="3" stroke-linejoin="round"/>${H.map((v, i) => `<circle cx="${X[i]}" cy="${Y(v)}" r="5" fill="#fff" stroke="#5B3FD0" stroke-width="3"/><text x="${X[i]}" y="${Y(v) - 10}" font-size="11" text-anchor="middle" font-weight="700">${v}</text><text x="${X[i]}" y="152" font-size="11" text-anchor="middle" fill="#64748B">JP ${i + 1}</text>`).join('')}</svg></div>
+    b.innerHTML = `<div class="grid" style="margin-bottom:20px">${[['Total Peserta', d.peserta, 'users', 1], ['Hadir Hari Ini', pct + '%', 'check', 2], ['Refleksi Masuk', d.refleksi, 'chat', 4], ['Lembar Praktik', d.praktik, 'doc', 3]].map(s => `<div class="card stat"><span class="tile t${s[3]}">${ic(s[2])}</span><small class="lb">${s[0]}</small><b data-n="${s[1]}">${s[1]}</b></div>`).join('')}</div>
+    <div class="grid g2"><div class="card"><h2>Tren Kehadiran per Sesi JP</h2><svg viewBox="0 0 360 160" width="100%" role="img" aria-label="Grafik kehadiran"><line x1="30" x2="350" y1="${Y(P * .95)}" y2="${Y(P * .95)}" stroke="#2EC97A" stroke-dasharray="5 4"/><text x="352" y="${Y(P * .95) - 4}" font-size="9" fill="#2EC97A" text-anchor="end">Target 95%</text><polyline class="ln" pathLength="1" points="${pts}" fill="none" stroke="#5B3FD0" stroke-width="3" stroke-linejoin="round"/>${H.map((v, i) => `<circle cx="${X[i]}" cy="${Y(v)}" r="5" fill="#fff" stroke="#5B3FD0" stroke-width="3"/><text x="${X[i]}" y="${Y(v) - 10}" font-size="11" text-anchor="middle" font-weight="700">${v}</text><text x="${X[i]}" y="152" font-size="11" text-anchor="middle" fill="#64748B">JP ${i + 1}</text>`).join('')}</svg></div>
     <div class="card"><h2>Status Sesi JP</h2>${[1, 2, 3].map(n => `<div class="sw"><div><b>JP ${n}</b> <small>${JP[n]}</small></div><button class="btn sm ${d.sesi[n] ? 'bad' : 'glow'}" data-t="${n}" data-on="${d.sesi[n] ? 0 : 1}">${d.sesi[n] ? 'Tutup Sesi' : 'Buka Sesi'}</button></div>`).join('')}</div></div>
     <div class="grid g2"><div class="card"><h2>Karya Terbaru</h2><div class="tw"><table><tr><th>Guru</th><th>Judul</th><th>Status</th></tr>${d.recent.map(q => `<tr><td>${esc(q.nama)}<br><small>${esc(q.sekolah)}</small></td><td>${esc(q.judul)}</td><td><span class="pill ${esc(q.status)}">${esc(q.status)}</span></td></tr>`).join('') || '<tr><td colspan="3">Belum ada.</td></tr>'}</table></div></div>
     <div class="card"><h2>Status Lembar Praktik</h2><div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="donut" style="background:conic-gradient(${d.praktik ? cg : '#E2E8F0 0 100%'})"></div><div>${Object.keys(C).map(k => `<div class="lg"><i style="background:${C[k]}"></i>${k}: <b>${st[k] || 0}</b></div>`).join('')}</div></div></div></div>`;
@@ -247,7 +271,7 @@ const V = {
       $('#tb', b).innerHTML = R.length ? `<table><tr>${k.map(x => `<th>${x.replace('_', ' ')}</th>`).join('')}${tab === 'praktik' ? '<th>Aksi</th>' : ''}</tr>${R.map(r => `<tr>${k.map(x => `<td>${x === 'tautan' ? `<a href="${safeUrl(r[x])}" target="_blank" rel="noopener">Buka</a>` : x === 'status' ? `<span class="pill ${esc(r[x])}">${esc(r[x])}</span>` : esc(r[x])}</td>`).join('')}${tab === 'praktik' ? `<td style="white-space:nowrap"><button class="btn sm" data-st="Disetujui" data-id="${esc(r.id)}">Setujui</button> <button class="btn ghost sm" data-st="Revisi" data-id="${esc(r.id)}">Revisi</button></td>` : ''}</tr>`).join('')}</table>` : 'Belum ada data.';
       $$('[data-st]', b).forEach(x => x.onclick = async () => { const r = await api('admin.praktik.status', { id: x.dataset.id, status: x.dataset.st }); toast(r.message, r.success ? 'ok' : 'err'); load(); });
     };
-    const load = async () => { $$('[data-tab]', b).forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); $('#tb', b).innerHTML = '<div class="skel"></div>'; let r; if (PRE[tab]) { r = { success: true, data: PRE[tab] }; delete PRE[tab]; } else r = await api('admin.rekap', { tab }); rows = r.success ? r.data : []; if (!r.success) toast(r.message, 'err'); draw(); };
+    const load = async () => { $$('[data-tab]', b).forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); $('#tb', b).innerHTML = SK.tbl; let r; if (PRE[tab]) { r = { success: true, data: PRE[tab] }; delete PRE[tab]; } else r = await api('admin.rekap', { tab }); rows = r.success ? r.data : []; if (!r.success) toast(r.message, 'err'); draw(); };
     $$('[data-tab]', b).forEach(x => x.onclick = () => { tab = x.dataset.tab; load(); }); $('#q', b).oninput = draw;
     $('#ex', b).onclick = () => { if (!rows.length) return toast('Tidak ada data untuk diunduh.', 'err'); const k = Object.keys(rows[0]), q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"'; const blob = new Blob(['\ufeff' + [k.map(q).join(',')].concat(rows.map(r => k.map(c => q(r[c])).join(','))).join('\r\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rekap-' + tab + '.csv'; a.click(); URL.revokeObjectURL(a.href); };
     load();
@@ -261,7 +285,7 @@ const V = {
   }
 };
 function cardSumber(s, i) {
-  const im = (s.gambar || '').split('|').filter(u => /^https:\/\//.test(u)), em = ['📘', '🎨', '🧩'], gr = ['g1', 'g2', 'g3'];
+  const im = (s.gambar || '').split('|').filter(u => /^https:\/\//.test(u)), em = [ic('book'), ic('star'), ic('slides')], gr = ['g1', 'g2', 'g3'];
   const sl = im.length ? im.map(u => `<div class="slide" style="background-image:url('${encodeURI(u).replace(/[()'"]/g, '')}')"></div>`) : [0, 1, 2].map(k => `<div class="slide ${gr[(i + k) % 3]}"><span>${em[(i + k) % 3]}</span></div>`);
   return `<article class="card sc"><div class="ph"><div class="slides" data-ms="${4000 + i * 500}">${sl.join('')}</div>${dots(sl.length)}</div><div class="sb"><span class="tag">${esc(s.jenis || 'Sumber')}</span><h3>${esc(s.judul)}</h3><p>${esc(s.keterangan)}</p><div class="qr" data-u="${esc(s.tautan)}"></div><div class="row"><a class="btn glow" href="${safeUrl(s.tautan)}" target="_blank" rel="noopener">Buka Tautan</a><button class="btn ghost" data-copy="${esc(s.tautan)}">Salin</button></div></div></article>`;
 }
@@ -281,23 +305,58 @@ function loginModal() {
 function fin(x, d) { if (!x.success) return toast(x.message, 'err'); token = x.data.token; me = x.data.me; localStorage.setItem('bk_t', token); localStorage.setItem('bk_m', JSON.stringify(me)); d.remove(); shell(); go('dash'); }
 
 // ---------- Efek: glow kartu, salin, kursor partikel ----------
-document.addEventListener('pointermove', e => { const c = e.target.closest && e.target.closest('.card'); if (c) { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', e.clientX - r.left + 'px'); c.style.setProperty('--my', e.clientY - r.top + 'px'); } });
+document.addEventListener('pointermove', e => {
+  const o = e.target; if (!o.closest) return;
+  const c = o.closest('.card,.hero'); if (c) { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', e.clientX - r.left + 'px'); c.style.setProperty('--my', e.clientY - r.top + 'px'); }
+  const k = o.closest('.qa,.sc,.stat'); if (k && e.pointerType === 'mouse') { const r = k.getBoundingClientRect(); k.style.setProperty('--ry', ((e.clientX - r.left) / r.width - .5) * 8 + 'deg'); k.style.setProperty('--rx', (.5 - (e.clientY - r.top) / r.height) * 8 + 'deg'); }
+}, { passive: true });
+document.addEventListener('pointerout', e => { const k = e.target.closest && e.target.closest('.qa,.sc,.stat'); if (k && !k.contains(e.relatedTarget)) { k.style.setProperty('--rx', '0deg'); k.style.setProperty('--ry', '0deg'); } });
+document.addEventListener('pointerdown', e => {   // efek riak pada tombol
+  const b = e.target.closest && e.target.closest('.btn,.bb,.th,.tabs button,.jpb'); if (!b || b.disabled || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2, s = document.createElement('span'); s.className = 'rp';
+  s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`; b.appendChild(s); setTimeout(() => s.remove(), 650);
+}, { passive: true });
+addEventListener('scroll', () => document.body.classList.toggle('scr', scrollY > 8), { passive: true });
 document.addEventListener('click', e => { const c = e.target.closest('[data-copy]'); if (c) navigator.clipboard.writeText(c.dataset.copy).then(() => toast('Tautan disalin.'), () => toast('Gagal menyalin.', 'err')); });
+// Kursor "+" berpartikel: kanvas hanya digambar saat ada gerakan/partikel (hemat CPU & baterai)
 (function () {
   if (matchMedia('(pointer:coarse)').matches || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
-  const c = document.createElement('canvas'); c.id = 'fx'; document.body.appendChild(c); const x = c.getContext('2d'); let W, H, m = { x: -99, y: -99 }, P = [];
-  const rs = () => { W = c.width = innerWidth; H = c.height = innerHeight; }; rs(); addEventListener('resize', rs);
-  addEventListener('mousemove', e => { m.x = e.clientX; m.y = e.clientY; for (let i = 0; i < 2; i++) P.push({ x: m.x, y: m.y, vx: (Math.random() - .5) * 1.8, vy: (Math.random() - .5) * 1.8 - .3, l: 1, s: Math.random() * 2.4 + .8, h: 250 + Math.random() * 50 }); if (P.length > 160) P.splice(0, P.length - 160); });
-  document.addEventListener('mouseleave', () => { m.x = m.y = -99; });
-  (function loop() {
+  const c = document.createElement('canvas'); c.id = 'fx'; document.body.appendChild(c); const x = c.getContext('2d');
+  let W, H, m = { x: -99, y: -99 }, P = [], on = false, last = 0;
+  const draw = () => {
     x.clearRect(0, 0, W, H); P = P.filter(p => p.l > 0);
     P.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .01; p.l -= .022; x.globalAlpha = Math.max(p.l, 0); x.fillStyle = `hsl(${p.h},85%,62%)`; x.shadowColor = x.fillStyle; x.shadowBlur = 8; x.beginPath(); x.arc(p.x, p.y, Math.max(p.s * p.l, 0.1), 0, 7); x.fill(); });
     x.globalAlpha = 1; x.shadowBlur = 0; x.lineCap = 'round';
     [['#fff', 5], ['#431fb8', 2]].forEach(a => { x.strokeStyle = a[0]; x.lineWidth = a[1]; x.beginPath(); x.moveTo(m.x - 7, m.y); x.lineTo(m.x + 7, m.y); x.moveTo(m.x, m.y - 7); x.lineTo(m.x, m.y + 7); x.stroke(); });
-    requestAnimationFrame(loop);
-  })();
+  };
+  const loop = () => { draw(); if (P.length || performance.now() - last < 300) requestAnimationFrame(loop); else on = false; };
+  const kick = () => { last = performance.now(); if (!on) { on = true; requestAnimationFrame(loop); } };
+  const rs = () => { W = c.width = innerWidth; H = c.height = innerHeight; kick(); }; rs(); addEventListener('resize', rs);
+  addEventListener('mousemove', e => { m.x = e.clientX; m.y = e.clientY; for (let i = 0; i < 2; i++) P.push({ x: m.x, y: m.y, vx: (Math.random() - .5) * 1.8, vy: (Math.random() - .5) * 1.8 - .3, l: 1, s: Math.random() * 2.4 + .8, h: 250 + Math.random() * 50 }); if (P.length > 160) P.splice(0, P.length - 160); kick(); }, { passive: true });
+  document.addEventListener('mouseleave', () => { m.x = m.y = -99; kick(); });
   document.documentElement.classList.add('nocursor');
 })();
+
+// Favicon interaktif: titik hijau saat ada sesi JP dibuka; berkedip + judul tab "●" bila tab sedang di latar
+(function () {
+  const L = document.querySelector('link[rel=icon]'); if (!L) return;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d'); if (!x) return;
+  const cap = new Path2D('M32 14 8 26l24 12 24-12z'), base = new Path2D('M18 34v10c8 6 20 6 28 0V34l-14 7z');
+  let open = false, blink = false, last = '';
+  const draw = dot => {
+    x.clearRect(0, 0, 64, 64); const g = x.createLinearGradient(0, 0, 64, 64); g.addColorStop(0, '#431fb8'); g.addColorStop(1, '#7B5CF0');
+    x.fillStyle = g; x.beginPath(); x.roundRect ? x.roundRect(0, 0, 64, 64, 16) : x.rect(0, 0, 64, 64); x.fill();
+    x.fillStyle = '#fff'; x.fill(cap); x.globalAlpha = .9; x.fill(base); x.globalAlpha = 1;
+    x.strokeStyle = '#FFC24A'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.moveTo(54, 27); x.lineTo(54, 41); x.stroke(); x.fillStyle = '#FFC24A'; x.beginPath(); x.arc(54, 44, 3, 0, 7); x.fill();
+    if (dot) { x.fillStyle = '#fff'; x.beginPath(); x.arc(49, 15, 12, 0, 7); x.fill(); x.fillStyle = '#2EC97A'; x.beginPath(); x.arc(49, 15, 9, 0, 7); x.fill(); }
+    const u = cv.toDataURL('image/png'); if (u !== last) { last = u; L.type = 'image/png'; L.href = u; }
+  };
+  const title = () => { const b = document.title.replace(/^● /, ''); document.title = (open && document.hidden && blink ? '● ' : '') + b; };
+  window.setFav = o => { o = !!o; if (o === open) return; open = o; blink = false; draw(open); title(); };
+  setInterval(() => { if (!open) return; if (document.hidden) { blink = !blink; draw(blink); } else if (blink) { blink = false; draw(true); } title(); }, 900);
+  document.addEventListener('visibilitychange', () => { blink = false; if (open) draw(true); title(); });
+})();
+if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
 // ---------- Mulai ----------
 shell(); go(location.hash.slice(1) in V ? location.hash.slice(1) : 'beranda');

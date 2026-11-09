@@ -24,11 +24,20 @@ function loadBoot() {
 }
 
 // ---------- Cangkang & navigasi ----------
-const NAV_P = [['beranda', 'Beranda', '🏠'], ['absen', 'Absensi', '✅'], ['refleksi', 'Refleksi', '💭'], ['praktik', 'Praktik', '📝'], ['sumber', 'Sumber', '📚']];
-const NAV_A = [['dash', 'Dashboard', '📊'], ['rekap', 'Rekap', '🗂️'], ['kelola', 'Kelola', '⚙️']];
-const TITLE = { beranda: 'Beranda', absen: 'Absensi', refleksi: 'Refleksi', praktik: 'Lembar Praktik', sumber: 'Sumber Belajar', dash: 'Dashboard Admin', rekap: 'Rekap Data', kelola: 'Kelola Sumber Belajar' };
+const ICN = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>', chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>', book: '<path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/><path d="M12 6v14"/>',
+  chart: '<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-8"/>', folder: '<path d="M3 6h6l2 2h10v11H3z"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  slides: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3-6 7-6s7 2 7 6M17 5a3 3 0 010 6M22 20c0-3-2-5-5-5.5"/>', cap: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',
+  rocket: '<path d="M12 3c4 2 6 6 5 11l-5 4-5-4c-1-5 1-9 5-11z"/><circle cx="12" cy="10" r="1.6"/><path d="M7 15l-3 3M17 15l3 3"/>'
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICN[n] || ''}</svg>`;
+const NAV_P = [['beranda', 'Beranda', 'home'], ['materi', 'Materi', 'slides'], ['baik', 'Praktik Baik', 'star'], ['absen', 'Absensi', 'check'], ['refleksi', 'Refleksi', 'chat'], ['praktik', 'Lembar Praktik', 'doc'], ['sumber', 'Sumber', 'book']];
+const NAV_A = [['dash', 'Dashboard', 'chart'], ['rekap', 'Rekap', 'folder'], ['kelola', 'Kelola', 'gear']];
+const TITLE = { beranda: 'Beranda', materi: 'Materi Presentasi', baik: 'Praktik Baik', absen: 'Absensi', refleksi: 'Refleksi', praktik: 'Lembar Praktik', sumber: 'Sumber Belajar', dash: 'Dashboard Admin', rekap: 'Rekap Data', kelola: 'Kelola Sumber Belajar' };
 function shell() {
-  $('#app').innerHTML = `<aside class="side"><div class="brand"><div class="logo">🎓</div><div><b>BOSKIN 2026</b><small>Guru Kreatif · Siswa Aktif</small></div></div><nav>${(me ? NAV_A.concat(NAV_P) : NAV_P).map(n => `<button data-v="${n[0]}"><span>${n[2]}</span>${n[1]}</button>`).join('')}</nav></aside><main id="main"></main>`;
+  $('#app').innerHTML = `<aside class="side"><div class="brand"><div class="logo">🎓</div><div><b>BOSKIN 2026</b><small>Guru Kreatif · Siswa Aktif</small></div></div><nav>${(me ? NAV_A.concat(NAV_P) : NAV_P).map(n => `<button data-v="${n[0]}">${ic(n[2])}<span>${n[1]}</span></button>`).join('')}</nav></aside><main id="main"></main>`;
   $$('[data-v]').forEach(b => b.onclick = () => go(b.dataset.v));
 }
 async function go(v) {
@@ -76,12 +85,22 @@ function bindForm(f, action, msg, done, pre) {   // draf tersimpan di perangkat;
 }
 
 // ---------- Halaman peserta ----------
-const HERO = [['Guru Kreatif, Siswa Aktif', 'Merajut digitalisasi pembelajaran tanpa batas bersama BOSKIN 2026.', '🎓', 'g1'], ['Absensi per sesi JP', 'Catat kehadiran cepat dari ponsel — tanpa login, tanpa rekap manual.', '✅', 'g2'], ['Bagikan karya, tularkan inspirasi', 'Kumpulkan lembar praktik dan temukan sumber belajar lewat QR Code.', '🚀', 'g3']];
+const HERO = [['Guru Kreatif, Siswa Aktif', 'Merajut digitalisasi pembelajaran tanpa batas bersama BOSKIN 2026.', 'cap', 'g1'], ['Absensi per sesi JP', 'Catat kehadiran cepat dari ponsel — tanpa login, tanpa rekap manual.', 'check', 'g2'], ['Bagikan karya, tularkan inspirasi', 'Kumpulkan lembar praktik dan temukan sumber belajar lewat QR Code.', 'rocket', 'g3']];
 const V = {
   async beranda(b) {
-    b.innerHTML = `<div class="hero"><div class="slides" data-ms="5000">${HERO.map(h => `<div class="slide ${h[3]}"><h1>${h[0]}</h1><p>${h[1]}</p><span class="em">${h[2]}</span></div>`).join('')}</div>${dots(HERO.length)}</div>
-    <div class="grid">${NAV_P.slice(1).map((n, i) => `<div class="card stat" style="cursor:pointer" data-go="${n[0]}"><span class="ic">${n[2]}</span><b>${n[1]}</b><p style="color:var(--mu);margin:6px 0 12px">${['Pilih sesi JP lalu kirim presensi.', 'Tuliskan refleksi dan tindak lanjut.', 'Kumpulkan tautan hasil praktik.', 'Tautan karya & QR Code.'][i]}</p><span class="btn glow sm">Buka →</span></div>`).join('')}</div>`;
-    $$('[data-go]', b).forEach(c => c.onclick = () => go(c.dataset.go));
+    const QA = [['absen', 'Absensi', 'check', 2, 'Pilih sesi JP lalu kirim presensi.'], ['refleksi', 'Refleksi', 'chat', 4, 'Tuliskan refleksi dan tindak lanjut.'], ['praktik', 'Lembar Praktik', 'doc', 3, 'Kumpulkan tautan atau berkas hasil praktik.'], ['sumber', 'Sumber Belajar', 'book', 1, 'Tautan karya, materi, dan QR Code.']];
+    const draw = () => {
+      const ss = S.sesi || {}, L = (S.sumber || []).slice(-3).reverse(), n = (window.MATERI || { slides: [] }).slides.length;
+      b.innerHTML = `<div class="bento"><div class="hero b-hero"><div class="slides" data-ms="5500">${HERO.map(h => `<div class="slide ${h[3]}"><h1>${h[0]}</h1><p>${h[1]}</p><span class="em">${ic(h[2])}</span></div>`).join('')}</div>${dots(HERO.length)}<div class="hero-cta"><button class="btn glow" data-go="absen">Mulai Absen</button><button class="btn ghost" data-go="materi">Lihat Materi</button></div></div>
+      <div class="card"><h2>Status Sesi Hari Ini</h2>${[1, 2, 3].map(k => `<div class="sw"><div><b>JP ${k}</b><br><small>${JP[k]} WIB</small></div><span class="pillst ${ss[k] ? 'on' : ''}">${ss[k] ? '● Dibuka' : 'Ditutup'}</span></div>`).join('')}</div></div>
+      <div class="grid" style="margin-bottom:20px">${QA.map(q => `<button class="card qa" data-go="${q[0]}"><span class="tile t${q[3]}">${ic(q[2])}</span><b>${q[1]}</b><small>${q[4]}</small></button>`).join('')}</div>
+      <div class="grid g2"><div class="card"><span class="tag">Materi Presentasi</span><h2 style="margin-top:8px">Digitalisasi Pembelajaran</h2><p class="mu">${n} slide · 105 menit · dari penggunaan teknologi menuju pengalaman belajar yang bermakna.</p><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn glow" data-go="materi">Buka Materi</button><button class="btn ghost" data-go="baik">Praktik Baik</button></div></div>
+      <div class="card"><h2>Sumber Belajar Terbaru</h2>${L.map(s => `<div class="sw"><div><b>${esc(s.judul)}</b><br><small>${esc(s.jenis)}</small></div><a class="btn ghost sm" href="${safeUrl(s.tautan)}" target="_blank" rel="noopener">Buka</a></div>`).join('') || '<p class="mu">Belum ada sumber.</p>'}</div></div>`;
+      $$('[data-go]', b).forEach(c => c.onclick = () => go(c.dataset.go)); slider();
+    };
+    let c = null; try { c = JSON.parse(localStorage.getItem('bk_boot') || 'null'); } catch (e) {}
+    if (c) { S = c; draw(); } else b.innerHTML = '<div class="skel"></div>';
+    const h0 = JSON.stringify(c); await loadBoot(); if (!c || JSON.stringify(S) !== h0) draw();
   },
   async absen(b) {
     await loadBoot();
@@ -116,6 +135,43 @@ const V = {
     const h0 = JSON.stringify(c && c.sumber); await loadBoot();
     if (!c || JSON.stringify(S.sumber) !== h0) draw();
   },
+  async materi(b) {
+    const M = window.MATERI; if (!M) return b.innerHTML = '<div class="card">Materi belum termuat.</div>';
+    const N = M.slides.length; let i = Math.min(+(localStorage.getItem('bk_sl') || 0), N - 1), tab = 'slide', notes = false;
+    const body = s => `<h2 class="sl-t">${esc(s.judul)}</h2>${s.sub ? `<p class="sl-s">${esc(s.sub)}</p>` : ''}${s.poin ? `<ul class="sl-l">${s.poin.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}${s.lapis ? `<div class="layers">${s.lapis.map(l => `<div class="ly"><b>${esc(l[0])}</b><span>${esc(l[1])}</span></div>`).join('')}</div>` : ''}${s.tabel ? `<div class="tw"><table><tr>${s.tabel.h.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${s.tabel.r.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : ''}${s.kunci ? `<blockquote>${esc(s.kunci)}</blockquote>` : ''}${s.tautan ? `<a class="btn glow" href="${safeUrl(s.tautan[1])}" target="_blank" rel="noopener">${esc(s.tautan[0])} ↗</a>` : ''}${s.ref ? `<div class="refs">${s.ref.map(r => `<a href="${safeUrl(r[1])}" target="_blank" rel="noopener">${esc(r[0])}</a>`).join('')}</div>` : ''}`;
+    b.innerHTML = `<div class="tabs">${[['slide', 'Slide'], ['waktu', 'Jadwal 105 menit'], ['siap', 'Persiapan']].map(t => `<button data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="mv"></div>`;
+    const mv = $('#mv', b), go2 = k => { i = (k + N) % N; localStorage.setItem('bk_sl', i); paint(); };
+    const paint = () => {
+      $$('[data-t]', b).forEach(x => x.classList.toggle('on', x.dataset.t === tab));
+      if (tab === 'slide') {
+        const s = M.slides[i];
+        mv.innerHTML = `<div class="deck"><div class="stage" id="stg"><div class="sl-h"><span class="tag">${esc(s.bagian)}</span><span class="num">${i + 1} / ${N}</span></div>${body(s)}</div>
+        <div class="deck-bar"><button class="btn ghost" id="pv">← Sebelumnya</button><div class="prog"><i style="width:${(i + 1) / N * 100}%"></i></div><button class="btn glow" id="nx">Berikutnya →</button></div>
+        <div class="deck-tools"><button class="btn ghost sm" id="fs">⛶ Layar penuh</button>${me ? `<button class="btn ghost sm" id="nt">${notes ? 'Sembunyikan' : 'Tampilkan'} narasi pemateri</button>` : ''}</div>
+        ${me && notes ? `<div class="card"><h2>Narasi pemateri</h2><p>${esc(s.narasi)}</p>${s.catatan ? `<p class="mu"><b>Catatan:</b> ${esc(s.catatan)}</p>` : ''}</div>` : ''}
+        <div class="thumbs">${M.slides.map((x, k) => `<button class="th ${k === i ? 'on' : ''}" data-k="${k}"><b>${k + 1}</b>${esc(x.judul)}</button>`).join('')}</div></div>`;
+        $('#pv', mv).onclick = () => go2(i - 1); $('#nx', mv).onclick = () => go2(i + 1);
+        $('#fs', mv).onclick = () => { const e = $('#stg', mv); document.fullscreenElement ? document.exitFullscreen() : e.requestFullscreen && e.requestFullscreen(); };
+        $('#nt', mv)?.addEventListener('click', () => { notes = !notes; paint(); });
+        $$('[data-k]', mv).forEach(x => x.onclick = () => go2(+x.dataset.k));
+      } else if (tab === 'waktu') {
+        mv.innerHTML = `<div class="card"><h2>Pembagian waktu — 3 JP (105 menit)</h2>${M.waktu.map(w => `<div class="sw"><div style="flex:1"><b>${esc(w[0])}</b><div class="prog" style="margin:6px 0 0"><i style="width:${w[2] / 20 * 100}%"></i></div></div><span class="tag">${esc(w[1])}</span></div>`).join('')}<div class="sw"><b>Total</b><span class="tag">105 menit</span></div></div>`;
+      } else {
+        let ck = []; try { ck = JSON.parse(localStorage.getItem('bk_ck') || '[]'); } catch (e) {}
+        mv.innerHTML = `<div class="card"><h2>Checklist persiapan <span class="tag">${ck.length}/${M.siap.length} siap</span></h2><div class="prog"><i style="width:${ck.length / M.siap.length * 100}%"></i></div>${M.siap.map((x, k) => `<label class="chk"><input type="checkbox" data-c="${k}" ${ck.includes(k) ? 'checked' : ''}><span>${esc(x)}</span></label>`).join('')}</div>`;
+        $$('[data-c]', mv).forEach(x => x.onchange = () => { const k = +x.dataset.c; ck = x.checked ? ck.concat(k) : ck.filter(y => y !== k); localStorage.setItem('bk_ck', JSON.stringify(ck)); paint(); });
+      }
+    };
+    $$('[data-t]', b).forEach(x => x.onclick = () => { tab = x.dataset.t; paint(); });
+    document.onkeydown = e => { if (view !== 'materi' || tab !== 'slide' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === 'ArrowRight') go2(i + 1); if (e.key === 'ArrowLeft') go2(i - 1); };
+    paint();
+  },
+  async baik(b) {
+    const M = window.MATERI || { karya: [] }, Z = 'https://zlfdnt.github.io/zulfaspace/';
+    b.innerHTML = `<div class="card"><div class="spot-h"><div><span class="tag">Berbagi Praktik Baik</span><h2 style="margin-top:8px">ZulfaSpace — Digital Learning Portfolio</h2><p class="mu" style="margin:0">Ruang dokumentasi dan eksplorasi karya pembelajaran matematika dan koding interaktif.</p></div><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><a class="btn glow" href="${Z}" target="_blank" rel="noopener">Buka ZulfaSpace ↗</a><div class="qr" id="qz"></div></div></div><div class="frame"><iframe src="${Z}" title="Pratinjau ZulfaSpace" loading="lazy" referrerpolicy="no-referrer"></iframe></div></div>
+    <h2>Lima Karya, Lima Pengalaman Belajar</h2><div class="grid">${M.karya.map(k => `<div class="card"><span class="tag">${esc(k[1])}</span><h3>${esc(k[0])}</h3><p class="mu" style="margin:0">${esc(k[2])}</p></div>`).join('')}</div>${me ? '<p class="mu">Catatan admin: deskripsi karya masih kerangka dari materi — sesuaikan dengan fitur aktual masing-masing media.</p>' : ''}`;
+    window.QRCode && new QRCode($('#qz', b), { text: Z, width: 88, height: 88, colorDark: '#431fb8' });
+  },
   // ---------- Admin ----------
   async dash(b) {
     if (!me) return needLogin(b);
@@ -126,7 +182,7 @@ const V = {
     const X = [50, 180, 310], Y = v => 130 - v / mx * 100, pts = H.map((v, i) => X[i] + ',' + Y(v)).join(' ');
     const st = d.status, tot = Math.max(d.praktik, 1), C = { Baru: '#F5A23B', Ditinjau: '#3B82F6', Disetujui: '#2EC97A', Revisi: '#EF4444' };
     let a = 0; const cg = Object.keys(C).map(k => { const s = a; a += (st[k] || 0) / tot * 100; return `${C[k]} ${s}% ${a}%`; }).join(',');
-    b.innerHTML = `<div class="grid" style="margin-bottom:20px">${[['Total Peserta', d.peserta, '👥'], ['Hadir Hari Ini', pct + '%', '✅'], ['Refleksi Masuk', d.refleksi, '💭'], ['Lembar Praktik', d.praktik, '📝']].map(s => `<div class="card stat"><span class="ic">${s[2]}</span><span>${s[0]}</span><b>${s[1]}</b></div>`).join('')}</div>
+    b.innerHTML = `<div class="grid" style="margin-bottom:20px">${[['Total Peserta', d.peserta, 'users', 1], ['Hadir Hari Ini', pct + '%', 'check', 2], ['Refleksi Masuk', d.refleksi, 'chat', 4], ['Lembar Praktik', d.praktik, 'doc', 3]].map(s => `<div class="card stat"><span class="tile t${s[3]}">${ic(s[2])}</span><small class="lb">${s[0]}</small><b>${s[1]}</b></div>`).join('')}</div>
     <div class="grid g2"><div class="card"><h2>Tren Kehadiran per Sesi JP</h2><svg viewBox="0 0 360 160" width="100%" role="img" aria-label="Grafik kehadiran"><line x1="30" x2="350" y1="${Y(P * .95)}" y2="${Y(P * .95)}" stroke="#2EC97A" stroke-dasharray="5 4"/><text x="352" y="${Y(P * .95) - 4}" font-size="9" fill="#2EC97A" text-anchor="end">Target 95%</text><polyline points="${pts}" fill="none" stroke="#5B3FD0" stroke-width="3" stroke-linejoin="round"/>${H.map((v, i) => `<circle cx="${X[i]}" cy="${Y(v)}" r="5" fill="#fff" stroke="#5B3FD0" stroke-width="3"/><text x="${X[i]}" y="${Y(v) - 10}" font-size="11" text-anchor="middle" font-weight="700">${v}</text><text x="${X[i]}" y="152" font-size="11" text-anchor="middle" fill="#64748B">JP ${i + 1}</text>`).join('')}</svg></div>
     <div class="card"><h2>Status Sesi JP</h2>${[1, 2, 3].map(n => `<div class="sw"><div><b>JP ${n}</b> <small>${JP[n]}</small></div><button class="btn sm ${d.sesi[n] ? 'bad' : 'glow'}" data-t="${n}" data-on="${d.sesi[n] ? 0 : 1}">${d.sesi[n] ? 'Tutup Sesi' : 'Buka Sesi'}</button></div>`).join('')}</div></div>
     <div class="grid g2"><div class="card"><h2>Karya Terbaru</h2><div class="tw"><table><tr><th>Guru</th><th>Judul</th><th>Status</th></tr>${d.recent.map(q => `<tr><td>${esc(q.nama)}<br><small>${esc(q.sekolah)}</small></td><td>${esc(q.judul)}</td><td><span class="pill ${esc(q.status)}">${esc(q.status)}</span></td></tr>`).join('') || '<tr><td colspan="3">Belum ada.</td></tr>'}</table></div></div>

@@ -71,3 +71,16 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - Belum ada antrean notifikasi atau trigger keep-warm terjadwal (belum dibutuhkan; tidak ada notifikasi WA/email).
 - Ilustrasi: slide bawaan memakai gradien + emoji; tambahkan foto sendiri lewat kolom *gambar* di Kelola (tautan https dipisah `|`).
 - Kursor `+` berpartikel hanya aktif di perangkat dengan mouse dan nonaktif bila pengguna memilih "kurangi animasi".
+
+## H. Pembaruan: Materi Presentasi, Praktik Baik, dan Tampilan Baru
+**Menu baru**
+- **Materi** — 14 slide "Digitalisasi Pembelajaran" (gabungan Lampiran 1 dan 2): navigasi panah keyboard, mode layar penuh, tab *Jadwal 105 menit* dan *Persiapan* (checklist tersimpan di perangkat). **Narasi pemateri** hanya tampil bila Anda masuk sebagai admin.
+- **Praktik Baik** — pratinjau ZulfaSpace (https://zlfdnt.github.io/zulfaspace/), QR Code, dan ringkasan lima karya.
+- **Beranda** dirombak: status sesi JP langsung, kartu aksi cepat, ringkasan materi, dan sumber belajar terbaru. Dashboard admin memakai ikon dan kartu baru.
+
+**Sumber Belajar awal** — jalankan `setupAppEnvironment()` sekali lagi (aman diulang). Fungsi ini menambahkan: folder Drive materi, ZulfaSpace, dan 5 referensi kebijakan (Ditsmp, BPMP Kepri, Ruang Murid, dll.), serta menghapus baris contoh `example.com` bila ada. Lalu Deploy → New version.
+
+**Perhatian**
+- Isi folder Drive belum bisa saya baca. Agar berkas di dalamnya tampil satu per satu, tambahkan tautan tiap berkas lewat menu **Kelola**, dan pastikan folder/berkas diatur "siapa saja dengan tautan".
+- Isi materi di `js/materi.js` (repo publik): narasi hanya disembunyikan di tampilan, bukan dirahasiakan. Jangan taruh data sensitif di sana.
+- Deskripsi lima karya masih kerangka dari Lampiran 1; sesuaikan dengan fitur aktual lewat `js/materi.js` (bagian `karya` dan slide 8).

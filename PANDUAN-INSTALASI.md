@@ -84,3 +84,10 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - Isi folder Drive belum bisa saya baca. Agar berkas di dalamnya tampil satu per satu, tambahkan tautan tiap berkas lewat menu **Kelola**, dan pastikan folder/berkas diatur "siapa saja dengan tautan".
 - Isi materi di `js/materi.js` (repo publik): narasi hanya disembunyikan di tampilan, bukan dirahasiakan. Jangan taruh data sensitif di sana.
 - Deskripsi lima karya masih kerangka dari Lampiran 1; sesuaikan dengan fitur aktual lewat `js/materi.js` (bagian `karya` dan slide 8).
+
+## I. Pembaruan: Materi Sesuai Template PPTX & Layar Penuh
+- Isi **14 slide** kini mengikuti berkas *Presentasi_Digitalisasi_Pembelajaran_BOSKIN_2026_Tema_Bimtek.pptx*: urutan, judul, dan teks yang sama. Tampilan meniru template (latar kelas, lambang, logo #PendidikanBermutu/Ramah, foto sampul, palet biru–teal–oranye, pita kuning-biru di bawah) dengan font **Figtree**. Aset gambar ada di folder `img/`; ganti file di sana bila ingin mengubahnya.
+- **Layar penuh yang mulus:** panggung slide dibuat sekali dan hanya isinya yang berganti, jadi layar penuh tidak pernah terlepas. Pindah slide: **→ ↓ PageDown Spasi** (maju), **← ↑ PageUp Backspace** (mundur), **Home/End**, tombol panah di layar, atau geser jari. Tekan **F** untuk masuk/keluar layar penuh, **Esc** untuk keluar. Bilah kontrol muncul saat mouse digerakkan lalu hilang otomatis.
+- Slide diskalakan otomatis ke ukuran layar/proyektor (rasio 16:9). Di iPhone yang tidak mendukung layar penuh asli, dipakai mode layar penuh tiruan.
+- Narasi pemateri tetap hanya tampil untuk admin di bawah slide (tidak tampil saat layar penuh).
+- Teks slide diubah lewat `js/materi.js`.

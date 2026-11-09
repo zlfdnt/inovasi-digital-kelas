@@ -86,6 +86,25 @@ function bindForm(f, action, msg, done, pre) {   // draf tersimpan di perangkat;
 
 // ---------- Halaman peserta ----------
 const HERO = [['Guru Kreatif, Siswa Aktif', 'Merajut digitalisasi pembelajaran tanpa batas bersama BOSKIN 2026.', 'cap', 'g1'], ['Absensi per sesi JP', 'Catat kehadiran cepat dari ponsel — tanpa login, tanpa rekap manual.', 'check', 'g2'], ['Bagikan karya, tularkan inspirasi', 'Kumpulkan lembar praktik dan temukan sumber belajar lewat QR Code.', 'rocket', 'g3']];
+// ---------- Penyaji slide (mengikuti template BOSKIN: kanvas 1280×720) ----------
+const SLP = {
+  hd: s => `<div class="hd"><img src="img/emblem.png" alt=""><div class="tt"><h2>${esc(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt=""></div>`,
+  ft: f => !f ? '' : `<div class="ft">${f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${esc(f.teks || f.kecil)}</span>`}</div>`,
+  card: (i, top) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}">${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p>${esc(i.x)}</p>` : ''}${i.y ? `<p class="y">${esc(i.y)}</p>` : ''}</div>`
+};
+function slideHTML(s) {
+  if (s.t === 'cover') return `<div class="sl cover"><img class="wm" src="img/wordmark.png" alt=""><h1>${esc(s.judul)}</h1><div class="cvf"><b>${esc(s.sub)}</b><span>${esc(s.sub2)}</span></div></div>`;
+  if (s.t === 'close') return `<div class="sl">${SLP.hd(s)}<div class="bd"><div class="big">${s.teks.map(x => `<p>${esc(x)}</p>`).join('')}</div></div><div class="ft"><span class="gold">${esc(s.tombol)}</span></div></div>`;
+  let bd = '';
+  if (s.t === 'cards') bd = `<div class="g" style="--cols:${s.kolom}">${s.items.map(i => SLP.card(i)).join('')}</div>`;
+  else if (s.t === 'cols3' || s.t === 'cols5') bd = `<div class="g" style="--cols:${s.items.length}">${s.items.map(i => SLP.card(i, true)).join('')}</div>`;
+  else if (s.t === 'rows') bd = `<div class="rows">${s.items.map(i => `<div class="rw c${i.c || 0}"><span class="rn">${esc(i.n) || ''}</span><b>${esc(i.k)}</b><p>${esc(i.x || '')}</p></div>`).join('')}</div>`;
+  else if (s.t === 'cols') bd = `<div class="g" style="--cols:2">${s.panels.map(p => `<div class="cd pn c${p.c || 0}"><b>${esc(p.k)}</b>${p.isi.map(l => Array.isArray(l) ? `<p class="blk"><strong>${esc(l[0])}</strong><span>${esc(l[1])}</span></p>` : l ? `<p>${esc(l)}</p>` : '<br>').join('')}</div>`).join('')}</div>`;
+  else if (s.t === 'hero') bd = `<div class="hero2"><h3>${esc(s.kartu.k)}</h3><p>${esc(s.kartu.x)}</p><a class="btn2" href="${safeUrl(s.kartu.url)}" target="_blank" rel="noopener">${esc(s.kartu.tombol)}</a></div>`;
+  else if (s.t === 'panel') bd = `<div class="pnl"><b>${esc(s.panel.k)}</b><ul>${s.panel.daftar.map(d => `<li>${esc(d)}</li>`).join('')}</ul><span class="gold r">${esc(s.panel.tombol)}</span></div>`;
+  return `<div class="sl">${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}</div>`;
+}
+
 const V = {
   async beranda(b) {
     const QA = [['absen', 'Absensi', 'check', 2, 'Pilih sesi JP lalu kirim presensi.'], ['refleksi', 'Refleksi', 'chat', 4, 'Tuliskan refleksi dan tindak lanjut.'], ['praktik', 'Lembar Praktik', 'doc', 3, 'Kumpulkan tautan atau berkas hasil praktik.'], ['sumber', 'Sumber Belajar', 'book', 1, 'Tautan karya, materi, dan QR Code.']];
@@ -137,33 +156,63 @@ const V = {
   },
   async materi(b) {
     const M = window.MATERI; if (!M) return b.innerHTML = '<div class="card">Materi belum termuat.</div>';
-    const N = M.slides.length; let i = Math.min(+(localStorage.getItem('bk_sl') || 0), N - 1), tab = 'slide', notes = false;
-    const body = s => `<h2 class="sl-t">${esc(s.judul)}</h2>${s.sub ? `<p class="sl-s">${esc(s.sub)}</p>` : ''}${s.poin ? `<ul class="sl-l">${s.poin.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}${s.lapis ? `<div class="layers">${s.lapis.map(l => `<div class="ly"><b>${esc(l[0])}</b><span>${esc(l[1])}</span></div>`).join('')}</div>` : ''}${s.tabel ? `<div class="tw"><table><tr>${s.tabel.h.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${s.tabel.r.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : ''}${s.kunci ? `<blockquote>${esc(s.kunci)}</blockquote>` : ''}${s.tautan ? `<a class="btn glow" href="${safeUrl(s.tautan[1])}" target="_blank" rel="noopener">${esc(s.tautan[0])} ↗</a>` : ''}${s.ref ? `<div class="refs">${s.ref.map(r => `<a href="${safeUrl(r[1])}" target="_blank" rel="noopener">${esc(r[0])}</a>`).join('')}</div>` : ''}`;
-    b.innerHTML = `<div class="tabs">${[['slide', 'Slide'], ['waktu', 'Jadwal 105 menit'], ['siap', 'Persiapan']].map(t => `<button data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="mv"></div>`;
-    const mv = $('#mv', b), go2 = k => { i = (k + N) % N; localStorage.setItem('bk_sl', i); paint(); };
+    const N = M.slides.length; let i = Math.min(+(localStorage.getItem('bk_sl') || 0), N - 1), tab = 'slide';
+    b.innerHTML = `<div class="tabs">${[['slide', 'Slide'], ['waktu', 'Jadwal 105 menit'], ['siap', 'Persiapan']].map(x => `<button data-t="${x[0]}">${x[1]}</button>`).join('')}</div><div id="mv"></div>`;
+    const mv = $('#mv', b); let ctl = null;
     const paint = () => {
-      $$('[data-t]', b).forEach(x => x.classList.toggle('on', x.dataset.t === tab));
-      if (tab === 'slide') {
-        const s = M.slides[i];
-        mv.innerHTML = `<div class="deck"><div class="stage" id="stg"><div class="sl-h"><span class="tag">${esc(s.bagian)}</span><span class="num">${i + 1} / ${N}</span></div>${body(s)}</div>
-        <div class="deck-bar"><button class="btn ghost" id="pv">← Sebelumnya</button><div class="prog"><i style="width:${(i + 1) / N * 100}%"></i></div><button class="btn glow" id="nx">Berikutnya →</button></div>
-        <div class="deck-tools"><button class="btn ghost sm" id="fs">⛶ Layar penuh</button>${me ? `<button class="btn ghost sm" id="nt">${notes ? 'Sembunyikan' : 'Tampilkan'} narasi pemateri</button>` : ''}</div>
-        ${me && notes ? `<div class="card"><h2>Narasi pemateri</h2><p>${esc(s.narasi)}</p>${s.catatan ? `<p class="mu"><b>Catatan:</b> ${esc(s.catatan)}</p>` : ''}</div>` : ''}
-        <div class="thumbs">${M.slides.map((x, k) => `<button class="th ${k === i ? 'on' : ''}" data-k="${k}"><b>${k + 1}</b>${esc(x.judul)}</button>`).join('')}</div></div>`;
-        $('#pv', mv).onclick = () => go2(i - 1); $('#nx', mv).onclick = () => go2(i + 1);
-        $('#fs', mv).onclick = () => { const e = $('#stg', mv); document.fullscreenElement ? document.exitFullscreen() : e.requestFullscreen && e.requestFullscreen(); };
-        $('#nt', mv)?.addEventListener('click', () => { notes = !notes; paint(); });
-        $$('[data-k]', mv).forEach(x => x.onclick = () => go2(+x.dataset.k));
-      } else if (tab === 'waktu') {
-        mv.innerHTML = `<div class="card"><h2>Pembagian waktu — 3 JP (105 menit)</h2>${M.waktu.map(w => `<div class="sw"><div style="flex:1"><b>${esc(w[0])}</b><div class="prog" style="margin:6px 0 0"><i style="width:${w[2] / 20 * 100}%"></i></div></div><span class="tag">${esc(w[1])}</span></div>`).join('')}<div class="sw"><b>Total</b><span class="tag">105 menit</span></div></div>`;
-      } else {
+      $$('[data-t]', b).forEach(x => x.classList.toggle('on', x.dataset.t === tab)); ctl = null;
+      if (tab === 'slide') slideTab(); else if (tab === 'waktu') mv.innerHTML = `<div class="card"><h2>Pembagian waktu — 3 JP (105 menit)</h2>${M.waktu.map(w => `<div class="sw"><div style="flex:1"><b>${esc(w[0])}</b><div class="prog" style="margin:6px 0 0"><i style="width:${w[2] / 20 * 100}%"></i></div></div><span class="tag">${esc(w[1])}</span></div>`).join('')}<div class="sw"><b>Total</b><span class="tag">105 menit</span></div></div>`;
+      else {
         let ck = []; try { ck = JSON.parse(localStorage.getItem('bk_ck') || '[]'); } catch (e) {}
         mv.innerHTML = `<div class="card"><h2>Checklist persiapan <span class="tag">${ck.length}/${M.siap.length} siap</span></h2><div class="prog"><i style="width:${ck.length / M.siap.length * 100}%"></i></div>${M.siap.map((x, k) => `<label class="chk"><input type="checkbox" data-c="${k}" ${ck.includes(k) ? 'checked' : ''}><span>${esc(x)}</span></label>`).join('')}</div>`;
         $$('[data-c]', mv).forEach(x => x.onchange = () => { const k = +x.dataset.c; ck = x.checked ? ck.concat(k) : ck.filter(y => y !== k); localStorage.setItem('bk_ck', JSON.stringify(ck)); paint(); });
       }
     };
+    // Panggung dibuat SEKALI; pergantian slide hanya mengganti isi kanvas, sehingga layar penuh tidak pernah terlepas.
+    const slideTab = () => {
+      mv.innerHTML = `<div class="stg" id="stg"><div class="fr" id="fr"><div class="cv" id="cv"></div><button class="nv l" data-d="-1" aria-label="Slide sebelumnya">‹</button><button class="nv r" data-d="1" aria-label="Slide berikutnya">›</button></div>
+      <div class="bar"><button class="bb" data-d="-1" aria-label="Sebelumnya">‹</button><span class="ct" id="ct"></span><div class="pg"><i id="pgi"></i></div><button class="bb" data-d="1" aria-label="Berikutnya">›</button><button class="bb wide" id="fs">⛶ Layar penuh</button></div></div>
+      <p class="mu hint">Di ponsel: ketuk “Layar penuh”, lalu putar ke mode lanskap. Geser kiri/kanan atau pakai tombol panah untuk berpindah slide.</p>
+      <div id="nts"></div><div class="thumbs">${M.slides.map((x, k) => `<button class="th" data-k="${k}"><b>${k + 1}</b>${esc(x.judul)}</button>`).join('')}</div>`;
+      const stg = $('#stg', mv), fr = $('#fr', mv), cv = $('#cv', mv); let hide = 0;
+      const fit = () => cv.style.setProperty('--s', fr.clientWidth / 1280);
+      new ResizeObserver(fit).observe(fr); fit();
+      const show = (k, dir = 1) => {
+        i = (k + N) % N; localStorage.setItem('bk_sl', i); const s = M.slides[i];
+        cv.innerHTML = slideHTML(s); cv.firstElementChild.classList.add(dir > 0 ? 'an' : 'ap');
+        $('#ct', mv).textContent = `${i + 1} / ${N}`; $('#pgi', mv).style.width = (i + 1) / N * 100 + '%';
+        $$('.th', mv).forEach((x, n) => x.classList.toggle('on', n === i));
+        $('#nts', mv).innerHTML = me ? `<details class="card nts"><summary>Narasi pemateri — slide ${i + 1}</summary><p>${esc(s.narasi)}</p>${s.catatan ? `<p class="mu"><b>Catatan:</b> ${esc(s.catatan)}</p>` : ''}</details>` : '';
+      };
+      const step = d => show(i + d, d);
+      const isFs = () => document.fullscreenElement === stg || stg.classList.contains('pfs');
+      const upd = () => { $('#fs', mv).textContent = isFs() ? '✕ Keluar layar penuh' : '⛶ Layar penuh'; setTimeout(fit, 50); };
+      const toggleFs = () => {
+        if (isFs()) { stg.classList.remove('pfs'); if (document.fullscreenElement) document.exitFullscreen(); upd(); return; }
+        const rq = stg.requestFullscreen || stg.webkitRequestFullscreen;
+        if (rq) { try { Promise.resolve(rq.call(stg)).catch(() => { stg.classList.add('pfs'); upd(); }); } catch (e) { stg.classList.add('pfs'); upd(); } } else { stg.classList.add('pfs'); upd(); }
+      };
+      $$('[data-d]', mv).forEach(x => x.onclick = () => { step(+x.dataset.d); x.blur(); });
+      $('#fs', mv).onclick = e => { toggleFs(); e.currentTarget.blur(); };
+      $$('.th', mv).forEach(x => x.onclick = () => show(+x.dataset.k, +x.dataset.k >= i ? 1 : -1));
+      const wake = () => { stg.classList.add('show'); clearTimeout(hide); hide = setTimeout(() => stg.classList.remove('show'), 2500); };
+      ['mousemove', 'touchstart', 'click'].forEach(ev => stg.addEventListener(ev, wake, { passive: true }));
+      let x0 = null; fr.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+      fr.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); });
+      document.onfullscreenchange = () => { upd(); wake(); };
+      document.onkeydown = e => {
+        if (view !== 'materi' || tab !== 'slide' || /INPUT|TEXTAREA|SELECT|SUMMARY/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+        const k = e.key, nx = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'], pv = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'];
+        if (k === 'Enter' && /A|BUTTON/.test(e.target.tagName)) return;
+        if (nx.includes(k)) { e.preventDefault(); step(1); } else if (pv.includes(k)) { e.preventDefault(); step(-1); }
+        else if (k === 'Home') { e.preventDefault(); show(0, -1); } else if (k === 'End') { e.preventDefault(); show(N - 1, 1); }
+        else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFs(); }
+        else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
+        else return; wake();
+      };
+      ctl = show; show(i, 1); upd();
+    };
     $$('[data-t]', b).forEach(x => x.onclick = () => { tab = x.dataset.t; paint(); });
-    document.onkeydown = e => { if (view !== 'materi' || tab !== 'slide' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return; if (e.key === 'ArrowRight') go2(i + 1); if (e.key === 'ArrowLeft') go2(i - 1); };
     paint();
   },
   async baik(b) {
@@ -242,7 +291,7 @@ document.addEventListener('click', e => { const c = e.target.closest('[data-copy
   document.addEventListener('mouseleave', () => { m.x = m.y = -99; });
   (function loop() {
     x.clearRect(0, 0, W, H); P = P.filter(p => p.l > 0);
-    P.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .01; p.l -= .022; x.globalAlpha = Math.max(p.l, 0); x.fillStyle = `hsl(${p.h},85%,62%)`; x.shadowColor = x.fillStyle; x.shadowBlur = 8; x.beginPath(); x.arc(p.x, p.y, p.s * p.l, 0, 7); x.fill(); });
+    P.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .01; p.l -= .022; x.globalAlpha = Math.max(p.l, 0); x.fillStyle = `hsl(${p.h},85%,62%)`; x.shadowColor = x.fillStyle; x.shadowBlur = 8; x.beginPath(); x.arc(p.x, p.y, Math.max(p.s * p.l, 0.1), 0, 7); x.fill(); });
     x.globalAlpha = 1; x.shadowBlur = 0; x.lineCap = 'round';
     [['#fff', 5], ['#431fb8', 2]].forEach(a => { x.strokeStyle = a[0]; x.lineWidth = a[1]; x.beginPath(); x.moveTo(m.x - 7, m.y); x.lineTo(m.x + 7, m.y); x.moveTo(m.x, m.y - 7); x.lineTo(m.x, m.y + 7); x.stroke(); });
     requestAnimationFrame(loop);

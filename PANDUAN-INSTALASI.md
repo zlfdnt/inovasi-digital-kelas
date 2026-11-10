@@ -122,3 +122,6 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - **Slide 7:** lima karya pertama sementara memuat portofolio ZulfaSpace; ganti `url` tiap karya di `js/materi.js` bila Anda sudah punya tautan langsungnya.
 - **TPACK (slide 4):** klik strip biru “Ketiganya selaras = TPACK” untuk penjelasan sederhana: apa itu TPACK, mengapa penting bagi digitalisasi, dan apakah bisa diterapkan tanpa digitalisasi, lengkap dengan contoh versi digital dan non-digital.
 - Slide 11 kini memberi contoh untuk setiap poin produk minimal.
+
+## N. Pembaruan: Tautan Langsung Keenam Karya
+Pratinjau di slide 7 kini memuat laman asli tiap karya: Petualangan Pecahan Season 2 (`/petualangan_pecahan_seasondua/`), Pseudocraft (`/pseudocraft/`), Pseudocode Lab (`/Pseudocode_Lab/`), Pythagoras Digital (`/PythagorasDigital/`), GeoQuest3D (`/geoquest-3d/`), dan Menjelajahi Dunia Digital dengan Aman (`/dunia-digital-aman/`), semuanya di `zlfdnt.github.io`. Label dan keterangan kartu diambil dari judul/deskripsi tiap laman. Bila suatu karya tidak tampil di jendela pratinjau (tergantung pengaturan laman), gunakan tombol **Buka di tab baru**. Menu **Praktik Baik** juga memiliki tombol **Buka** untuk tiap karya.

@@ -115,3 +115,10 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - **Slide 12 (Berbagi Hasil Karya)** memuat contoh penerapan dari ZulfaSpace: *Petualangan Pecahan Season 2* — tujuan, interaksi, hingga asesmen. Contoh ini **rancangan** berdasarkan nama dan fokus karya; sesuaikan dengan fitur aktual di `js/materi.js`.
 - Isi penjelasan dan contoh tiap tombol “i” ada di `js/materi.js` bagian `info`. Itu draf saya; mohon dicocokkan dengan bahan Bimtek Anda.
 - Perbaikan: angka kartu pada slide 5 dan 10 sempat hilang bila halaman dimuat langsung di slide tersebut (bentrok dengan efek hitung-naik dashboard) — sudah diperbaiki.
+
+## M. Pembaruan: Contoh Dunia Digital Aman, Pratinjau Langsung, Penjelasan TPACK
+- **Semua contoh** (slide 5, 10, 11, 12 dan seluruh tombol “i”) kini memakai media **“Menjelajahi Dunia Digital dengan Aman”** (https://zlfdnt.github.io/dunia-digital-aman/). Yang terverifikasi dari laman itu hanya judul dan deskripsinya: media interaktif Koding Bab 2 untuk SMP Kelas VII tentang cara kerja internet, literasi digital, dan keamanan data pribadi. Isi contoh adalah **rancangan** berdasarkan topik tersebut; sesuaikan dengan fitur aktual di `js/materi.js`.
+- **Pratinjau langsung** (laman asli tampil di dalam slide, bukan gambar statis): slide 5 (bingkai ponsel + tombol Perbesar), tombol **Lihat media contoh** di slide 10, 11, dan 12, serta tombol **Pratinjau** pada tiap karya di slide 7 (dengan tombol ‹ › untuk berpindah karya dan “Buka di tab baru”). Pratinjau memerlukan internet.
+- **Slide 7:** lima karya pertama sementara memuat portofolio ZulfaSpace; ganti `url` tiap karya di `js/materi.js` bila Anda sudah punya tautan langsungnya.
+- **TPACK (slide 4):** klik strip biru “Ketiganya selaras = TPACK” untuk penjelasan sederhana: apa itu TPACK, mengapa penting bagi digitalisasi, dan apakah bisa diterapkan tanpa digitalisasi, lengkap dengan contoh versi digital dan non-digital.
+- Slide 11 kini memberi contoh untuk setiap poin produk minimal.

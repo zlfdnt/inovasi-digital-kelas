@@ -111,13 +111,13 @@ function countUp(r) {
 }
 // ---------- Penyaji slide (template BOSKIN, kanvas 1280×720; teks bertanda *kata* disorot) ----------
 const hl = s => esc(s).replace(/\*(.+?)\*/g, '<em>$1</em>');
-const tw = s => { let n = 0, em = false; return String(s).split(' ').map(w => { const m = w.match(/^(\*?)(.*?)(\*?)([?.,!:;]*)$/); if (m[1]) em = true; const h = `<span class="w${em ? ' em' : ''}" style="--w:${n++}">${esc(m[2])}</span>${esc(m[4])}`; if (m[3]) em = false; return h; }).join(' '); };
+const tw = s => { let n = 0, em = false; return String(s).split(' ').map(w => { const m = w.match(/^(\*?)(.*?)(\*?)([?.,!:;]*)$/); if (m[1]) em = true; const h = `<span class="w${em ? ' em' : ''}" style="--w:${n++}">${esc(m[2] + m[4])}</span>`; if (m[3]) em = false; return h; }).join(' '); };
 const ib = (key, label) => `<button class="ib" data-info="${key}" aria-label="Penjelasan dan contoh: ${esc(label)}" title="Lihat penjelasan dan contoh">i</button>`;
 const ORB = '<i class="orb o1"></i><i class="orb o2"></i>';
 const SLP = {
   hd: s => `<div class="hd"><img src="img/emblem.png" alt="Logo Tut Wuri Handayani" decoding="async"><div class="tt"><h2>${tw(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt="" decoding="async"></div>`,
-  ft: f => !f ? '' : `<div class="ft">${f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${hl(f.teks || f.kecil)}</span>`}</div>`,
-  card: (i, top, k) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}" style="--i:${k}"${i.n ? ` data-wm="${esc(i.n)}"` : ''}>${i.info ? ib(i.info, i.k) : ''}${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}${i.tag ? `<span class="pill">${esc(i.tag)}</span>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p${i.q ? ' class="q"' : ''}>${hl(i.x)}</p>` : ''}${i.chips ? `<div class="chips">${i.chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}${i.y ? `<p class="y">${hl(i.y)}</p>` : ''}${i.contoh ? `<div class="ex"><small>${esc(i.exl || 'Contoh')}</small><p>${hl(i.contoh)}</p></div>` : ''}</div>`
+  ft: f => !f ? '' : `<div class="ft">${f.gold ? `<span class="gold">${esc(f.gold)}</span>` : f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${hl(f.teks || f.kecil)}</span>`}</div>`,
+  card: (i, top, k) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}" style="--i:${k}"${i.n ? ` data-wm="${esc(i.n)}"` : ''}>${i.info ? ib(i.info, i.k) : ''}${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}${i.tag ? `<div class="trow"><span class="pill">${esc(i.tag)}</span>${i.url ? `<button class="pvbtn" data-pi="${k}">▶ Pratinjau</button>` : ''}</div>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p${i.q ? ' class="q"' : ''}>${hl(i.x)}</p>` : ''}${i.chips ? `<div class="chips">${i.chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}${i.y ? `<p class="y">${hl(i.y)}</p>` : ''}${i.contoh ? `<div class="ex"><small>${esc(i.exl || 'Contoh')}</small><p>${hl(i.contoh)}</p></div>` : ''}</div>`
 };
 function slideHTML(s) {
   const gy = s.gaya ? ' ' + s.gaya : '';
@@ -129,20 +129,28 @@ function slideHTML(s) {
   else if (s.t === 'rows') bd = `<div class="rows${gy}" style="--st:${s.items.length < 4 ? 56 : 34}px">${s.items.map((i, k) => `<div class="rw c${i.c || 0}" style="--i:${k}"><span class="rn">${esc(i.n) || ''}</span><b>${esc(i.k)}</b><p>${hl(i.x || '')}</p></div>`).join('')}</div>`;
   else if (s.t === 'duo') { const L = s.panels[0], R = s.panels[1];
     bd = `<div class="g duo" style="--cols:2"><div class="cd pn c0" style="--i:0"><b class="ph">${esc(L.k)}</b><div class="prin">${L.prin.map(p => `<div class="pr"><span class="dot"></span><div><strong>${esc(p.k)}</strong><small>${esc(p.en)}</small></div>${ib(p.info, p.k)}</div>`).join('')}</div><div class="sh">${esc(L.langkah.judul)}</div><div class="steps">${L.langkah.items.map((x, n) => `<div class="st"><span class="sn">${n + 1}</span><strong>${esc(x.k)}</strong>${ib(x.info, x.k)}</div>`).join('')}</div></div>
-    <div class="cd pn c1" style="--i:1"><b class="ph">${esc(R.k)}</b>${R.baris.map(r => `<div class="tr ${r.cl}"><span class="tb">${esc(r.b)}</span><div><strong>${esc(r.k)}</strong><p>${esc(r.x)}</p></div>${ib(r.info, r.k)}</div>`).join('')}<div class="core">${ic('spark')}<span>${hl(R.inti.teks)}</span>${ib(R.inti.info, 'TPACK')}</div></div></div>`; }
+    <div class="cd pn c1" style="--i:1"><b class="ph">${esc(R.k)}</b>${R.def ? `<p class="def">${hl(R.def)}</p>` : ''}${R.baris.map(r => `<div class="tr ${r.cl}"><span class="tb">${esc(r.b)}</span><div><strong>${esc(r.k)}</strong><p>${esc(r.x)}</p></div>${ib(r.info, r.k)}</div>`).join('')}<div class="core" data-info="${R.inti.info}" role="button" tabindex="0">${ic('spark')}<span>${hl(R.inti.teks)}</span>${ib(R.inti.info, 'TPACK')}</div></div></div>`; }
+  else if (s.t === 'exp') bd = `<div class="xp"><div class="xl">${s.items.map((i, k) => `<div class="xr c${i.c || 0}" style="--i:${k}">${ib(i.info, i.k)}<span class="xn">${esc(i.n)}</span><div class="xm"><div class="xt"><b>${esc(i.k)}</b><span>${esc(i.x)}</span></div><div class="chips">${i.chips.map(c => `<span>${esc(c)}</span>`).join('')}</div><div class="ex"><small>Contoh: Dunia Digital Aman</small><p>${hl(i.contoh)}</p></div></div></div>`).join('')}</div><div class="phone"><iframe src="${safeUrl(s.media.url)}" title="Pratinjau ${esc(s.media.title)}" loading="lazy" referrerpolicy="no-referrer"></iframe><button class="pvb in" data-url="${esc(s.media.url)}" data-title="${esc(s.media.title)}">⤢ Perbesar</button></div></div>`;
+  else if (s.t === 'chk') bd = `<div class="g" style="--cols:2">${s.daftar.map((d, k) => `<div class="cd ck c${k}" style="--i:${k}"><div class="ckh"><span class="ckn">${k + 1}</span><b>${esc(d.k)}</b></div><div class="ex"><small>Contoh: Dunia Digital Aman</small><p>${hl(d.contoh)}</p></div></div>`).join('')}</div>`;
   else if (s.t === 'cols') bd = `<div class="g" style="--cols:2">${s.panels.map((p, k) => `<div class="cd pn c${p.c || 0}" style="--i:${k}"><b>${esc(p.k)}</b>${p.isi.map(l => Array.isArray(l) ? `<p class="blk"><strong>${esc(l[0])}</strong><span>${esc(l[1])}</span></p>` : l ? `<p>${esc(l)}</p>` : '<br>').join('')}</div>`).join('')}</div>`;
   else if (s.t === 'hero') bd = `<div class="hero2"><h3>${esc(s.kartu.k)}</h3><p>${esc(s.kartu.x)}</p><a class="btn2" href="${safeUrl(s.kartu.url)}" target="_blank" rel="noopener">${esc(s.kartu.tombol)}</a></div>`;
   else if (s.t === 'panel') bd = `<div class="pnl"><b>${esc(s.panel.k)}</b><ul>${s.panel.daftar.map((d, k) => `<li style="--i:${k}">${esc(d)}</li>`).join('')}</ul><span class="gold r">${esc(s.panel.tombol)}</span></div>`;
-  return `<div class="sl">${ORB}${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}</div>`;
+  const pv = s.prev ? `<button class="pvb" data-url="${esc(s.prev.url)}" data-title="${esc(s.prev.title)}">${ic('slides')} Lihat media contoh</button>` : '';
+  return `<div class="sl">${ORB}${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}${pv}</div>`;
 }
 // Sesuaikan ukuran otomatis agar teks tidak meluap, apa pun font yang dipilih
 function infoHTML(k) {
   const d = ((window.MATERI || {}).info || {})[k]; if (!d) return '';
-  return `<div class="popw"><div class="pop" role="dialog" aria-label="${esc(d.k)}"><button class="px" aria-label="Tutup">✕</button><span class="pt">${esc(d.tag)}</span><h3>${esc(d.k)}</h3><div class="pb"><b>Penjelasan</b><p>${hl(d.p)}</p></div><div class="pb ex"><b>Contoh</b><p>${hl(d.c)}</p></div></div></div>`;
+  const sec = d.bagian ? d.bagian.map(x => `<div class="pb"><b>${esc(x[0])}</b><p>${hl(x[1])}</p></div>`).join('') : `<div class="pb"><b>Penjelasan</b><p>${hl(d.p)}</p></div>`;
+  return `<div class="popw"><div class="pop${d.bagian ? ' long' : ''}" role="dialog" aria-label="${esc(d.k)}"><button class="px" aria-label="Tutup">✕</button><span class="pt">${esc(d.tag)}</span><h3>${esc(d.k)}</h3>${sec}<div class="pb ex"><b>Contoh</b><p>${hl(d.c)}</p></div></div></div>`;
+}
+function previewHTML(list, k) {
+  const it = list[k], u = safeUrl(it.url);
+  return `<div class="popw"><div class="pvw" role="dialog" aria-label="Pratinjau ${esc(it.title)}"><div class="pvh"><b>${esc(it.title)}</b>${list.length > 1 ? `<span class="pvc">${k + 1}/${list.length}</span><button class="pvn" data-d="-1" aria-label="Karya sebelumnya">‹</button><button class="pvn" data-d="1" aria-label="Karya berikutnya">›</button>` : ''}<a class="pvo" href="${u}" target="_blank" rel="noopener">Buka di tab baru ↗</a><button class="px" aria-label="Tutup">✕</button></div><div class="pvf"><iframe src="${u}" title="Pratinjau ${esc(it.title)}" referrerpolicy="no-referrer"></iframe></div>${it.note ? `<div class="pvt">${esc(it.note)}</div>` : ''}</div></div>`;
 }
 function fitAll(cv) {
   $$('.sl h2', cv).forEach(h => { h.style.fontSize = ''; let s = parseFloat(getComputedStyle(h).fontSize); while (h.offsetHeight > 96 && s > 24) { s -= 2; h.style.fontSize = s + 'px'; } });
-  $$('.cd,.rw,.pnl', cv).forEach(c => { c.style.fontSize = ''; let s = parseFloat(getComputedStyle(c).fontSize); while ((c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1) && s > 12) { s -= 1; c.style.fontSize = s + 'px'; } });
+  $$('.cd,.rw,.pnl,.xr', cv).forEach(c => { c.style.fontSize = ''; let s = parseFloat(getComputedStyle(c).fontSize); while ((c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1) && s > 12) { s -= 1; c.style.fontSize = s + 'px'; } });
 }
 const FONTS = [['luwes', 'Luwes'], ['modern', 'Modern'], ['elegan', 'Elegan'], ['ramah', 'Ramah'], ['asli', 'Template']];
 function loadDeckFonts(cb) {   // font slide dimuat hanya saat halaman Materi dibuka
@@ -232,11 +240,16 @@ const V = {
       const fntLabel = () => { $('#fnt', mv).textContent = 'Aa · ' + FONTS[fnt][1]; };
       const cycleFont = () => { fnt = (fnt + 1) % FONTS.length; stg.dataset.font = FONTS[fnt][0]; localStorage.setItem('bk_font', FONTS[fnt][0]); fntLabel(); requestAnimationFrame(() => fitAll(cv)); };
       const closeInfo = () => $$('.popw', cv).forEach(x => x.remove());
+      let cur = null;
       const openInfo = k => { const sl = cv.firstElementChild; closeInfo(); sl && sl.insertAdjacentHTML('beforeend', infoHTML(k)); };
+      const openPrev = (list, k) => { const sl = cv.firstElementChild; closeInfo(); if (!sl) return; cur = { list, k }; sl.insertAdjacentHTML('beforeend', previewHTML(list, k)); };
       cv.addEventListener('click', e => {
         if (e.target.closest('.px') || e.target.classList.contains('popw')) return closeInfo();
-        const ibn = e.target.closest('.ib'); if (ibn) { e.stopPropagation(); openInfo(ibn.dataset.info); return; }
-        if (e.target.closest('.pop')) return;
+        const pn = e.target.closest('.pvn'); if (pn && cur) { e.stopPropagation(); return openPrev(cur.list, (cur.k + (+pn.dataset.d) + cur.list.length) % cur.list.length); }
+        const pb = e.target.closest('.pvb'); if (pb) { e.stopPropagation(); return openPrev([{ title: pb.dataset.title, url: pb.dataset.url }], 0); }
+        const pv = e.target.closest('.pvbtn'); if (pv) { e.stopPropagation(); return openPrev(M.slides[i].items.map(x => ({ title: x.k, url: x.url, note: x.note })), +pv.dataset.pi); }
+        const ibn = e.target.closest('[data-info]'); if (ibn) { e.stopPropagation(); openInfo(ibn.dataset.info); return; }
+        if (e.target.closest('.pop,.pvw')) return;
         const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
       const show = (k, dir = 1) => {
         i = (k + N) % N; localStorage.setItem('bk_sl', i); const s = M.slides[i];
@@ -281,7 +294,7 @@ const V = {
   async baik(b) {
     const M = window.MATERI || { karya: [] }, Z = 'https://zlfdnt.github.io/zulfaspace/';
     b.innerHTML = `<div class="card"><div class="spot-h"><div><span class="tag">Berbagi Praktik Baik</span><h2 style="margin-top:8px">ZulfaSpace — Digital Learning Portfolio</h2><p class="mu" style="margin:0">Ruang dokumentasi dan eksplorasi karya pembelajaran matematika dan koding interaktif.</p></div><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><a class="btn glow" href="${Z}" target="_blank" rel="noopener">Buka ZulfaSpace ↗</a><div class="qr" id="qz"></div></div></div><div class="frame"><iframe src="${Z}" title="Pratinjau ZulfaSpace" loading="lazy" referrerpolicy="no-referrer"></iframe></div></div>
-    <h2>Enam Karya, Enam Pengalaman Belajar</h2><div class="grid">${M.karya.map(k => `<div class="card"><span class="tag">${esc(k[1])}</span><h3>${esc(k[0])}</h3><p class="mu" style="margin:0">${esc(k[2])}</p></div>`).join('')}</div>${me ? '<p class="mu">Catatan admin: deskripsi karya masih kerangka dari materi — sesuaikan dengan fitur aktual masing-masing media.</p>' : ''}`;
+    <h2>Enam Karya, Enam Pengalaman Belajar</h2><div class="grid">${M.karya.map(k => `<div class="card"><span class="tag">${esc(k[1])}</span><h3>${esc(k[0])}</h3><p class="mu" style="margin:0">${esc(k[2])}</p>${k[3] ? `<div style="margin-top:12px"><a class="btn ghost sm" href="${safeUrl(k[3])}" target="_blank" rel="noopener">Buka ↗</a></div>` : ''}</div>`).join('')}</div>${me ? '<p class="mu">Catatan admin: deskripsi karya masih kerangka dari materi — sesuaikan dengan fitur aktual masing-masing media.</p>' : ''}`;
     window.QRCode && new QRCode($('#qz', b), { text: Z, width: 88, height: 88, colorDark: '#431fb8' });
   },
   // ---------- Admin ----------

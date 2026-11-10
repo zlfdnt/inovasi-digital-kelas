@@ -99,3 +99,10 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - **Cepat:** font dimuat tanpa memblokir tampilan; script `defer`; `preconnect` ke Google Apps Script; efek kursor hanya menggambar saat ada gerakan (hemat CPU/baterai); latar aurora memakai animasi transform saja; panggilan data publik dibatasi 8 detik dan di-prefetch saat menu disentuh; service worker menyimpan gambar (halaman, CSS, dan JS tetap selalu versi terbaru dari jaringan).
 - **Aksesibilitas:** cincin fokus keyboard, target sentuh minimal 44px di layar sentuh, dan semua animasi mati bila perangkat memakai "kurangi gerakan".
 - Setelah push, lakukan Ctrl+Shift+R sekali; service worker lama (jika ada) akan diganti otomatis.
+
+## K. Pembaruan: Karya ke-6, Slide Dinamis, Logo Utuh, Generator RPP
+- **Slide 7** kini memuat **enam karya**; yang baru: *Jelajahi Dunia Digital dengan Aman*. Deskripsinya masih umum (isi karya tidak terbaca dari ZulfaSpace); sesuaikan di `js/materi.js` (slide 7 dan bagian `karya`).
+- **Font slide yang tidak kaku:** tombol **Aa** di bilah slide (atau tekan **T**, juga saat layar penuh) berganti gaya: *Luwes* (Baloo 2 + Nunito, bawaan), *Modern* (Plus Jakarta Sans), *Elegan* (Fraunces + Figtree), *Ramah* (Poppins), *Template* (Figtree). Pilihan tersimpan. Ukuran teks menyesuaikan otomatis agar tidak meluap.
+- **Tata letak dinamis:** judul muncul kata demi kata dengan kata kunci disorot (tulis `*kata*` di `js/materi.js`); kartu bergantian posisi (zig-zag), bertingkat (tangga/tangga naik), dan garis waktu; poin masuk berurutan. **Klik sebuah kartu/baris** untuk menyorot poin itu (yang lain meredup); klik lagi untuk batal.
+- **Logo Tut Wuri Handayani utuh** (`img/emblem.png`) — sebelumnya bagian bawahnya terpotong. Logo diambil dari berkas PPTX template Anda.
+- **Sumber Belajar** kini diawali bagian **Generator Modul Ajar**: *RPP/Modul Ajar Pembelajaran Mendalam* dan *RPP/Modul Ajar Kokurikuler* (tautan Gemini + QR Code + tombol salin). Tautan dapat diubah di `js/materi.js` bagian `alat`.

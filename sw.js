@@ -1,5 +1,5 @@
 // Service worker ringan: gambar = cache lalu segarkan di latar; halaman/JS/CSS = jaringan dulu (selalu versi terbaru), cache bila luring.
-const V = 'bk-v4';
+const V = 'bk-v5';
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(['./', 'index.html', 'img/favicon.svg']).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(n => n !== V).map(n => caches.delete(n)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

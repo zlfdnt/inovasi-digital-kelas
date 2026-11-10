@@ -33,6 +33,7 @@ const ICN = {
   chart: '<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-8"/>', folder: '<path d="M3 6h6l2 2h10v11H3z"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
   slides: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3-6 7-6s7 2 7 6M17 5a3 3 0 010 6M22 20c0-3-2-5-5-5.5"/>', cap: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 3v4M17 5h4"/>',
   rocket: '<path d="M12 3c4 2 6 6 5 11l-5 4-5-4c-1-5 1-9 5-11z"/><circle cx="12" cy="10" r="1.6"/><path d="M7 15l-3 3M17 15l3 3"/>'
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICN[n] || ''}</svg>`;
@@ -108,24 +109,42 @@ function countUp(r) {
     requestAnimationFrame(f);
   });
 }
-// ---------- Penyaji slide (mengikuti template BOSKIN: kanvas 1280×720) ----------
+// ---------- Penyaji slide (template BOSKIN, kanvas 1280×720; teks bertanda *kata* disorot) ----------
+const hl = s => esc(s).replace(/\*(.+?)\*/g, '<em>$1</em>');
+const tw = s => { let n = 0, em = false; return String(s).split(' ').map(w => { const m = w.match(/^(\*?)(.*?)(\*?)([?.,!:;]*)$/); if (m[1]) em = true; const h = `<span class="w${em ? ' em' : ''}" style="--w:${n++}">${esc(m[2])}</span>${esc(m[4])}`; if (m[3]) em = false; return h; }).join(' '); };
+const ORB = '<i class="orb o1"></i><i class="orb o2"></i>';
 const SLP = {
-  hd: s => `<div class="hd"><img src="img/emblem.png" alt=""><div class="tt"><h2>${esc(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt=""></div>`,
-  ft: f => !f ? '' : `<div class="ft">${f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${esc(f.teks || f.kecil)}</span>`}</div>`,
-  card: (i, top) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}">${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p>${esc(i.x)}</p>` : ''}${i.y ? `<p class="y">${esc(i.y)}</p>` : ''}</div>`
+  hd: s => `<div class="hd"><img src="img/emblem.png" alt="Logo Tut Wuri Handayani" decoding="async"><div class="tt"><h2>${tw(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt="" decoding="async"></div>`,
+  ft: f => !f ? '' : `<div class="ft">${f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${hl(f.teks || f.kecil)}</span>`}</div>`,
+  card: (i, top, k) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}" style="--i:${k}"${i.n ? ` data-n="${esc(i.n)}"` : ''}>${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p>${hl(i.x)}</p>` : ''}${i.y ? `<p class="y">${hl(i.y)}</p>` : ''}</div>`
 };
 function slideHTML(s) {
-  if (s.t === 'cover') return `<div class="sl cover"><img class="wm" src="img/wordmark.png" alt=""><h1>${esc(s.judul)}</h1><div class="cvf"><b>${esc(s.sub)}</b><span>${esc(s.sub2)}</span></div></div>`;
-  if (s.t === 'close') return `<div class="sl">${SLP.hd(s)}<div class="bd"><div class="big">${s.teks.map(x => `<p>${esc(x)}</p>`).join('')}</div></div><div class="ft"><span class="gold">${esc(s.tombol)}</span></div></div>`;
+  const gy = s.gaya ? ' ' + s.gaya : '';
+  if (s.t === 'cover') return `<div class="sl cover">${ORB}<img class="wm" src="img/wordmark.png" alt="Kemendikdasmen"><h1>${tw(s.judul)}</h1><div class="cvf"><b>${esc(s.sub)}</b><span>${esc(s.sub2)}</span></div></div>`;
+  if (s.t === 'close') return `<div class="sl">${ORB}${SLP.hd(s)}<div class="bd"><div class="big">${s.teks.map((x, k) => `<p style="--i:${k}">${hl(x)}</p>`).join('')}</div></div><div class="ft"><span class="gold">${esc(s.tombol)}</span></div></div>`;
   let bd = '';
-  if (s.t === 'cards') bd = `<div class="g" style="--cols:${s.kolom}">${s.items.map(i => SLP.card(i)).join('')}</div>`;
-  else if (s.t === 'cols3' || s.t === 'cols5') bd = `<div class="g" style="--cols:${s.items.length}">${s.items.map(i => SLP.card(i, true)).join('')}</div>`;
-  else if (s.t === 'rows') bd = `<div class="rows">${s.items.map(i => `<div class="rw c${i.c || 0}"><span class="rn">${esc(i.n) || ''}</span><b>${esc(i.k)}</b><p>${esc(i.x || '')}</p></div>`).join('')}</div>`;
-  else if (s.t === 'cols') bd = `<div class="g" style="--cols:2">${s.panels.map(p => `<div class="cd pn c${p.c || 0}"><b>${esc(p.k)}</b>${p.isi.map(l => Array.isArray(l) ? `<p class="blk"><strong>${esc(l[0])}</strong><span>${esc(l[1])}</span></p>` : l ? `<p>${esc(l)}</p>` : '<br>').join('')}</div>`).join('')}</div>`;
+  if (s.t === 'cards') bd = `<div class="g${gy}" style="--cols:${s.kolom}">${s.items.map((i, k) => SLP.card(i, 0, k)).join('')}</div>`;
+  else if (s.t === 'cols3' || s.t === 'cols5') bd = `<div class="g${gy}" style="--cols:${s.items.length}">${s.items.map((i, k) => SLP.card(i, 1, k)).join('')}</div>`;
+  else if (s.t === 'rows') bd = `<div class="rows${gy}" style="--st:${s.items.length < 4 ? 56 : 34}px">${s.items.map((i, k) => `<div class="rw c${i.c || 0}" style="--i:${k}"><span class="rn">${esc(i.n) || ''}</span><b>${esc(i.k)}</b><p>${hl(i.x || '')}</p></div>`).join('')}</div>`;
+  else if (s.t === 'cols') bd = `<div class="g" style="--cols:2">${s.panels.map((p, k) => `<div class="cd pn c${p.c || 0}" style="--i:${k}"><b>${esc(p.k)}</b>${p.isi.map(l => Array.isArray(l) ? `<p class="blk"><strong>${esc(l[0])}</strong><span>${esc(l[1])}</span></p>` : l ? `<p>${esc(l)}</p>` : '<br>').join('')}</div>`).join('')}</div>`;
   else if (s.t === 'hero') bd = `<div class="hero2"><h3>${esc(s.kartu.k)}</h3><p>${esc(s.kartu.x)}</p><a class="btn2" href="${safeUrl(s.kartu.url)}" target="_blank" rel="noopener">${esc(s.kartu.tombol)}</a></div>`;
-  else if (s.t === 'panel') bd = `<div class="pnl"><b>${esc(s.panel.k)}</b><ul>${s.panel.daftar.map(d => `<li>${esc(d)}</li>`).join('')}</ul><span class="gold r">${esc(s.panel.tombol)}</span></div>`;
-  return `<div class="sl">${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}</div>`;
+  else if (s.t === 'panel') bd = `<div class="pnl"><b>${esc(s.panel.k)}</b><ul>${s.panel.daftar.map((d, k) => `<li style="--i:${k}">${esc(d)}</li>`).join('')}</ul><span class="gold r">${esc(s.panel.tombol)}</span></div>`;
+  return `<div class="sl">${ORB}${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}</div>`;
 }
+// Sesuaikan ukuran otomatis agar teks tidak meluap, apa pun font yang dipilih
+function fitAll(cv) {
+  $$('.sl h2', cv).forEach(h => { h.style.fontSize = ''; let s = parseFloat(getComputedStyle(h).fontSize); while (h.offsetHeight > 96 && s > 24) { s -= 2; h.style.fontSize = s + 'px'; } });
+  $$('.cd,.rw,.pnl', cv).forEach(c => { c.style.fontSize = ''; let s = parseFloat(getComputedStyle(c).fontSize); while ((c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1) && s > 12) { s -= 1; c.style.fontSize = s + 'px'; } });
+}
+const FONTS = [['luwes', 'Luwes'], ['modern', 'Modern'], ['elegan', 'Elegan'], ['ramah', 'Ramah'], ['asli', 'Template']];
+function loadDeckFonts(cb) {   // font slide dimuat hanya saat halaman Materi dibuka
+  if (!document.getElementById('dkf')) { const l = document.createElement('link'); l.id = 'dkf'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Fraunces:wght@600;700;800&family=Poppins:wght@500;600;700&family=Figtree:wght@500;600;700;800&display=swap'; l.onload = () => document.fonts && document.fonts.ready.then(cb); document.head.appendChild(l); }
+}
+const alatHTML = () => {
+  const A = (window.MATERI && MATERI.alat) || []; if (!A.length) return '';
+  return `<section class="alat"><div class="alat-h"><span class="tag">${ic('spark')} Generator Modul Ajar</span><h2>Susun RPP &amp; Modul Ajar dengan bantuan AI</h2><p class="mu">Alat bantu berbasis Gemini. Isi data kelas Anda, lalu periksa dan sesuaikan hasilnya sebelum dipakai. Tautan dibuka lewat Gemini dan mungkin meminta masuk dengan akun Google.</p></div>
+  <div class="grid g2" style="margin-bottom:28px">${A.map((a, i) => `<article class="card alat-c c${i}"><div class="alat-i">${ic(a.ikon)}</div><h3>${esc(a.k)}</h3><p class="mu">${esc(a.x)}</p><div class="qr" data-u="${esc(a.url)}"></div><div class="row"><a class="btn glow" href="${safeUrl(a.url)}" target="_blank" rel="noopener">Buka Generator ↗</a><button class="btn ghost" data-copy="${esc(a.url)}">Salin</button></div></article>`).join('')}</div></section><h2>Koleksi Sumber Belajar</h2>`;
+};
 
 const V = {
   async beranda(b) {
@@ -172,7 +191,7 @@ const V = {
     });
   },
   async sumber(b) {   // tampil instan dari cache perangkat, lalu segarkan di latar
-    let first = true; const draw = () => { b.classList.toggle('nr', !first); first = false; const L = S.sumber || []; b.innerHTML = L.length ? `<div class="grid g2">${L.map(cardSumber).join('')}</div>` : '<div class="card">Belum ada sumber belajar.</div>'; $$('.qr', b).forEach(q => window.QRCode && new QRCode(q, { text: q.dataset.u, width: 88, height: 88, colorDark: '#431fb8' })); slider(); };
+    let first = true; const draw = () => { b.classList.toggle('nr', !first); first = false; const L = S.sumber || []; b.innerHTML = alatHTML() + (L.length ? `<div class="grid g2">${L.map(cardSumber).join('')}</div>` : '<div class="card">Belum ada sumber belajar.</div>'); $$('.qr', b).forEach(q => window.QRCode && new QRCode(q, { text: q.dataset.u, width: 88, height: 88, colorDark: '#431fb8' })); slider(); };
     let c = null; try { c = JSON.parse(localStorage.getItem('bk_boot') || 'null'); } catch (e) {}
     if (c && c.sumber) { S = c; draw(); }
     const h0 = JSON.stringify(c && c.sumber); await loadBoot();
@@ -182,7 +201,8 @@ const V = {
     const M = window.MATERI; if (!M) return b.innerHTML = '<div class="card">Materi belum termuat.</div>';
     const N = M.slides.length; let i = Math.min(+(localStorage.getItem('bk_sl') || 0), N - 1), tab = 'slide';
     b.innerHTML = `<div class="tabs">${[['slide', 'Slide'], ['waktu', 'Jadwal 105 menit'], ['siap', 'Persiapan']].map(x => `<button data-t="${x[0]}">${x[1]}</button>`).join('')}</div><div id="mv"></div>`;
-    const mv = $('#mv', b); let ctl = null;
+    const mv = $('#mv', b); let ctl = null; let fnt = Math.max(0, FONTS.findIndex(f => f[0] === localStorage.getItem('bk_font')));
+    loadDeckFonts(() => { const c = $('#cv', mv); c && fitAll(c); });
     const paint = () => {
       $$('[data-t]', b).forEach(x => x.classList.toggle('on', x.dataset.t === tab)); ctl = null;
       if (tab === 'slide') slideTab(); else if (tab === 'waktu') mv.innerHTML = `<div class="card"><h2>Pembagian waktu — 3 JP (105 menit)</h2>${M.waktu.map(w => `<div class="sw"><div style="flex:1"><b>${esc(w[0])}</b><div class="prog" style="margin:6px 0 0"><i style="width:${w[2] / 20 * 100}%"></i></div></div><span class="tag">${esc(w[1])}</span></div>`).join('')}<div class="sw"><b>Total</b><span class="tag">105 menit</span></div></div>`;
@@ -194,16 +214,19 @@ const V = {
     };
     // Panggung dibuat SEKALI; pergantian slide hanya mengganti isi kanvas, sehingga layar penuh tidak pernah terlepas.
     const slideTab = () => {
-      mv.innerHTML = `<div class="stg" id="stg"><div class="fr" id="fr"><div class="cv" id="cv"></div><button class="nv l" data-d="-1" aria-label="Slide sebelumnya">‹</button><button class="nv r" data-d="1" aria-label="Slide berikutnya">›</button></div>
-      <div class="bar"><button class="bb" data-d="-1" aria-label="Sebelumnya">‹</button><span class="ct" id="ct"></span><div class="pg"><i id="pgi"></i></div><button class="bb" data-d="1" aria-label="Berikutnya">›</button><button class="bb wide" id="fs">⛶ Layar penuh</button></div></div>
+      mv.innerHTML = `<div class="stg" id="stg" data-font="${FONTS[fnt][0]}"><div class="fr" id="fr"><div class="cv" id="cv"></div><button class="nv l" data-d="-1" aria-label="Slide sebelumnya">‹</button><button class="nv r" data-d="1" aria-label="Slide berikutnya">›</button></div>
+      <div class="bar"><button class="bb" data-d="-1" aria-label="Sebelumnya">‹</button><span class="ct" id="ct"></span><div class="pg"><i id="pgi"></i></div><button class="bb" data-d="1" aria-label="Berikutnya">›</button><button class="bb wide" id="fnt"></button><button class="bb wide" id="fs">⛶ Layar penuh</button></div></div>
       <p class="mu hint">Di ponsel: ketuk “Layar penuh”, lalu putar ke mode lanskap. Geser kiri/kanan atau pakai tombol panah untuk berpindah slide.</p>
       <div id="nts"></div><div class="thumbs">${M.slides.map((x, k) => `<button class="th" data-k="${k}"><b>${k + 1}</b>${esc(x.judul)}</button>`).join('')}</div>`;
       const stg = $('#stg', mv), fr = $('#fr', mv), cv = $('#cv', mv); let hide = 0;
       const fit = () => cv.style.setProperty('--s', fr.clientWidth / 1280);
       new ResizeObserver(fit).observe(fr); fit();
+      const fntLabel = () => { $('#fnt', mv).textContent = 'Aa · ' + FONTS[fnt][1]; };
+      const cycleFont = () => { fnt = (fnt + 1) % FONTS.length; stg.dataset.font = FONTS[fnt][0]; localStorage.setItem('bk_font', FONTS[fnt][0]); fntLabel(); requestAnimationFrame(() => fitAll(cv)); };
+      cv.addEventListener('click', e => { const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
       const show = (k, dir = 1) => {
         i = (k + N) % N; localStorage.setItem('bk_sl', i); const s = M.slides[i];
-        cv.innerHTML = slideHTML(s); cv.firstElementChild.classList.add(dir > 0 ? 'an' : 'ap');
+        cv.innerHTML = slideHTML(s); cv.firstElementChild.classList.add(dir > 0 ? 'an' : 'ap'); fitAll(cv);
         $('#ct', mv).textContent = `${i + 1} / ${N}`; $('#pgi', mv).style.width = (i + 1) / N * 100 + '%';
         $$('.th', mv).forEach((x, n) => x.classList.toggle('on', n === i));
         $('#nts', mv).innerHTML = me ? `<details class="card nts"><summary>Narasi pemateri — slide ${i + 1}</summary><p>${esc(s.narasi)}</p>${s.catatan ? `<p class="mu"><b>Catatan:</b> ${esc(s.catatan)}</p>` : ''}</details>` : '';
@@ -218,6 +241,7 @@ const V = {
       };
       $$('[data-d]', mv).forEach(x => x.onclick = () => { step(+x.dataset.d); x.blur(); });
       $('#fs', mv).onclick = e => { toggleFs(); e.currentTarget.blur(); };
+      $('#fnt', mv).onclick = e => { cycleFont(); e.currentTarget.blur(); };
       $$('.th', mv).forEach(x => x.onclick = () => show(+x.dataset.k, +x.dataset.k >= i ? 1 : -1));
       const wake = () => { stg.classList.add('show'); clearTimeout(hide); hide = setTimeout(() => stg.classList.remove('show'), 2500); };
       ['mousemove', 'touchstart', 'click'].forEach(ev => stg.addEventListener(ev, wake, { passive: true }));
@@ -231,10 +255,11 @@ const V = {
         if (nx.includes(k)) { e.preventDefault(); step(1); } else if (pv.includes(k)) { e.preventDefault(); step(-1); }
         else if (k === 'Home') { e.preventDefault(); show(0, -1); } else if (k === 'End') { e.preventDefault(); show(N - 1, 1); }
         else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFs(); }
+        else if (k === 't' || k === 'T') { e.preventDefault(); cycleFont(); }
         else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
         else return; wake();
       };
-      ctl = show; show(i, 1); upd();
+      ctl = show; fntLabel(); show(i, 1); upd();
     };
     $$('[data-t]', b).forEach(x => x.onclick = () => { tab = x.dataset.t; paint(); });
     paint();
@@ -242,7 +267,7 @@ const V = {
   async baik(b) {
     const M = window.MATERI || { karya: [] }, Z = 'https://zlfdnt.github.io/zulfaspace/';
     b.innerHTML = `<div class="card"><div class="spot-h"><div><span class="tag">Berbagi Praktik Baik</span><h2 style="margin-top:8px">ZulfaSpace — Digital Learning Portfolio</h2><p class="mu" style="margin:0">Ruang dokumentasi dan eksplorasi karya pembelajaran matematika dan koding interaktif.</p></div><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><a class="btn glow" href="${Z}" target="_blank" rel="noopener">Buka ZulfaSpace ↗</a><div class="qr" id="qz"></div></div></div><div class="frame"><iframe src="${Z}" title="Pratinjau ZulfaSpace" loading="lazy" referrerpolicy="no-referrer"></iframe></div></div>
-    <h2>Lima Karya, Lima Pengalaman Belajar</h2><div class="grid">${M.karya.map(k => `<div class="card"><span class="tag">${esc(k[1])}</span><h3>${esc(k[0])}</h3><p class="mu" style="margin:0">${esc(k[2])}</p></div>`).join('')}</div>${me ? '<p class="mu">Catatan admin: deskripsi karya masih kerangka dari materi — sesuaikan dengan fitur aktual masing-masing media.</p>' : ''}`;
+    <h2>Enam Karya, Enam Pengalaman Belajar</h2><div class="grid">${M.karya.map(k => `<div class="card"><span class="tag">${esc(k[1])}</span><h3>${esc(k[0])}</h3><p class="mu" style="margin:0">${esc(k[2])}</p></div>`).join('')}</div>${me ? '<p class="mu">Catatan admin: deskripsi karya masih kerangka dari materi — sesuaikan dengan fitur aktual masing-masing media.</p>' : ''}`;
     window.QRCode && new QRCode($('#qz', b), { text: Z, width: 88, height: 88, colorDark: '#431fb8' });
   },
   // ---------- Admin ----------

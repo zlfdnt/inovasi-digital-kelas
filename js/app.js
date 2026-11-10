@@ -112,11 +112,12 @@ function countUp(r) {
 // ---------- Penyaji slide (template BOSKIN, kanvas 1280×720; teks bertanda *kata* disorot) ----------
 const hl = s => esc(s).replace(/\*(.+?)\*/g, '<em>$1</em>');
 const tw = s => { let n = 0, em = false; return String(s).split(' ').map(w => { const m = w.match(/^(\*?)(.*?)(\*?)([?.,!:;]*)$/); if (m[1]) em = true; const h = `<span class="w${em ? ' em' : ''}" style="--w:${n++}">${esc(m[2])}</span>${esc(m[4])}`; if (m[3]) em = false; return h; }).join(' '); };
+const ib = (key, label) => `<button class="ib" data-info="${key}" aria-label="Penjelasan dan contoh: ${esc(label)}" title="Lihat penjelasan dan contoh">i</button>`;
 const ORB = '<i class="orb o1"></i><i class="orb o2"></i>';
 const SLP = {
   hd: s => `<div class="hd"><img src="img/emblem.png" alt="Logo Tut Wuri Handayani" decoding="async"><div class="tt"><h2>${tw(s.judul)}</h2>${s.sub ? `<p>${esc(s.sub)}</p>` : ''}</div><img class="strip" src="img/strip.png" alt="" decoding="async"></div>`,
   ft: f => !f ? '' : `<div class="ft">${f.pill ? `<span class="pill2">${esc(f.pill)}</span>` : `<span class="ftx${f.kecil ? ' sm' : ''}">${hl(f.teks || f.kecil)}</span>`}</div>`,
-  card: (i, top, k) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}" style="--i:${k}"${i.n ? ` data-n="${esc(i.n)}"` : ''}>${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p>${hl(i.x)}</p>` : ''}${i.y ? `<p class="y">${hl(i.y)}</p>` : ''}</div>`
+  card: (i, top, k) => `<div class="cd${top ? ' tp' : ''} c${i.c || 0}" style="--i:${k}"${i.n ? ` data-wm="${esc(i.n)}"` : ''}>${i.info ? ib(i.info, i.k) : ''}${i.n ? `<div class="num">${esc(i.n)}</div>` : ''}${i.tag ? `<span class="pill">${esc(i.tag)}</span>` : ''}<b>${esc(i.k)}</b>${i.x ? `<p${i.q ? ' class="q"' : ''}>${hl(i.x)}</p>` : ''}${i.chips ? `<div class="chips">${i.chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}${i.y ? `<p class="y">${hl(i.y)}</p>` : ''}${i.contoh ? `<div class="ex"><small>${esc(i.exl || 'Contoh')}</small><p>${hl(i.contoh)}</p></div>` : ''}</div>`
 };
 function slideHTML(s) {
   const gy = s.gaya ? ' ' + s.gaya : '';
@@ -126,12 +127,19 @@ function slideHTML(s) {
   if (s.t === 'cards') bd = `<div class="g${gy}" style="--cols:${s.kolom}">${s.items.map((i, k) => SLP.card(i, 0, k)).join('')}</div>`;
   else if (s.t === 'cols3' || s.t === 'cols5') bd = `<div class="g${gy}" style="--cols:${s.items.length}">${s.items.map((i, k) => SLP.card(i, 1, k)).join('')}</div>`;
   else if (s.t === 'rows') bd = `<div class="rows${gy}" style="--st:${s.items.length < 4 ? 56 : 34}px">${s.items.map((i, k) => `<div class="rw c${i.c || 0}" style="--i:${k}"><span class="rn">${esc(i.n) || ''}</span><b>${esc(i.k)}</b><p>${hl(i.x || '')}</p></div>`).join('')}</div>`;
+  else if (s.t === 'duo') { const L = s.panels[0], R = s.panels[1];
+    bd = `<div class="g duo" style="--cols:2"><div class="cd pn c0" style="--i:0"><b class="ph">${esc(L.k)}</b><div class="prin">${L.prin.map(p => `<div class="pr"><span class="dot"></span><div><strong>${esc(p.k)}</strong><small>${esc(p.en)}</small></div>${ib(p.info, p.k)}</div>`).join('')}</div><div class="sh">${esc(L.langkah.judul)}</div><div class="steps">${L.langkah.items.map((x, n) => `<div class="st"><span class="sn">${n + 1}</span><strong>${esc(x.k)}</strong>${ib(x.info, x.k)}</div>`).join('')}</div></div>
+    <div class="cd pn c1" style="--i:1"><b class="ph">${esc(R.k)}</b>${R.baris.map(r => `<div class="tr ${r.cl}"><span class="tb">${esc(r.b)}</span><div><strong>${esc(r.k)}</strong><p>${esc(r.x)}</p></div>${ib(r.info, r.k)}</div>`).join('')}<div class="core">${ic('spark')}<span>${hl(R.inti.teks)}</span>${ib(R.inti.info, 'TPACK')}</div></div></div>`; }
   else if (s.t === 'cols') bd = `<div class="g" style="--cols:2">${s.panels.map((p, k) => `<div class="cd pn c${p.c || 0}" style="--i:${k}"><b>${esc(p.k)}</b>${p.isi.map(l => Array.isArray(l) ? `<p class="blk"><strong>${esc(l[0])}</strong><span>${esc(l[1])}</span></p>` : l ? `<p>${esc(l)}</p>` : '<br>').join('')}</div>`).join('')}</div>`;
   else if (s.t === 'hero') bd = `<div class="hero2"><h3>${esc(s.kartu.k)}</h3><p>${esc(s.kartu.x)}</p><a class="btn2" href="${safeUrl(s.kartu.url)}" target="_blank" rel="noopener">${esc(s.kartu.tombol)}</a></div>`;
   else if (s.t === 'panel') bd = `<div class="pnl"><b>${esc(s.panel.k)}</b><ul>${s.panel.daftar.map((d, k) => `<li style="--i:${k}">${esc(d)}</li>`).join('')}</ul><span class="gold r">${esc(s.panel.tombol)}</span></div>`;
   return `<div class="sl">${ORB}${SLP.hd(s)}<div class="bd">${bd}</div>${SLP.ft(s.foot)}</div>`;
 }
 // Sesuaikan ukuran otomatis agar teks tidak meluap, apa pun font yang dipilih
+function infoHTML(k) {
+  const d = ((window.MATERI || {}).info || {})[k]; if (!d) return '';
+  return `<div class="popw"><div class="pop" role="dialog" aria-label="${esc(d.k)}"><button class="px" aria-label="Tutup">✕</button><span class="pt">${esc(d.tag)}</span><h3>${esc(d.k)}</h3><div class="pb"><b>Penjelasan</b><p>${hl(d.p)}</p></div><div class="pb ex"><b>Contoh</b><p>${hl(d.c)}</p></div></div></div>`;
+}
 function fitAll(cv) {
   $$('.sl h2', cv).forEach(h => { h.style.fontSize = ''; let s = parseFloat(getComputedStyle(h).fontSize); while (h.offsetHeight > 96 && s > 24) { s -= 2; h.style.fontSize = s + 'px'; } });
   $$('.cd,.rw,.pnl', cv).forEach(c => { c.style.fontSize = ''; let s = parseFloat(getComputedStyle(c).fontSize); while ((c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1) && s > 12) { s -= 1; c.style.fontSize = s + 'px'; } });
@@ -223,7 +231,13 @@ const V = {
       new ResizeObserver(fit).observe(fr); fit();
       const fntLabel = () => { $('#fnt', mv).textContent = 'Aa · ' + FONTS[fnt][1]; };
       const cycleFont = () => { fnt = (fnt + 1) % FONTS.length; stg.dataset.font = FONTS[fnt][0]; localStorage.setItem('bk_font', FONTS[fnt][0]); fntLabel(); requestAnimationFrame(() => fitAll(cv)); };
-      cv.addEventListener('click', e => { const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
+      const closeInfo = () => $$('.popw', cv).forEach(x => x.remove());
+      const openInfo = k => { const sl = cv.firstElementChild; closeInfo(); sl && sl.insertAdjacentHTML('beforeend', infoHTML(k)); };
+      cv.addEventListener('click', e => {
+        if (e.target.closest('.px') || e.target.classList.contains('popw')) return closeInfo();
+        const ibn = e.target.closest('.ib'); if (ibn) { e.stopPropagation(); openInfo(ibn.dataset.info); return; }
+        if (e.target.closest('.pop')) return;
+        const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
       const show = (k, dir = 1) => {
         i = (k + N) % N; localStorage.setItem('bk_sl', i); const s = M.slides[i];
         cv.innerHTML = slideHTML(s); cv.firstElementChild.classList.add(dir > 0 ? 'an' : 'ap'); fitAll(cv);
@@ -256,7 +270,7 @@ const V = {
         else if (k === 'Home') { e.preventDefault(); show(0, -1); } else if (k === 'End') { e.preventDefault(); show(N - 1, 1); }
         else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFs(); }
         else if (k === 't' || k === 'T') { e.preventDefault(); cycleFont(); }
-        else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
+        else if (k === 'Escape' && $('.popw', cv)) { closeInfo(); } else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
         else return; wake();
       };
       ctl = show; fntLabel(); show(i, 1); upd();

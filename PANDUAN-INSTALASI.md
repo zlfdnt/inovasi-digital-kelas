@@ -106,3 +106,12 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 - **Tata letak dinamis:** judul muncul kata demi kata dengan kata kunci disorot (tulis `*kata*` di `js/materi.js`); kartu bergantian posisi (zig-zag), bertingkat (tangga/tangga naik), dan garis waktu; poin masuk berurutan. **Klik sebuah kartu/baris** untuk menyorot poin itu (yang lain meredup); klik lagi untuk batal.
 - **Logo Tut Wuri Handayani utuh** (`img/emblem.png`) — sebelumnya bagian bawahnya terpotong. Logo diambil dari berkas PPTX template Anda.
 - **Sumber Belajar** kini diawali bagian **Generator Modul Ajar**: *RPP/Modul Ajar Pembelajaran Mendalam* dan *RPP/Modul Ajar Kokurikuler* (tautan Gemini + QR Code + tombol salin). Tautan dapat diubah di `js/materi.js` bagian `alat`.
+
+## L. Pembaruan: Tata Letak Slide Dirapikan + Tombol Info
+- **Slide 3 (Teknologi sebagai sarana)** dan semua slide berbentuk baris: kolom kini sejajar (lencana — judul — keterangan bergaris pemisah), dan keterangan tidak lagi melayang.
+- **Slide 4 (Deep Learning & TPACK)** didesain ulang: tiga prinsip (Berkesadaran, Bermakna, Menggembirakan), tiga langkah pengalaman belajar, serta CK / PK / TK beserta irisan TPACK.
+- **Tombol “i”** pada setiap poin (slide 4, 5, dan 12) membuka kotak **Penjelasan + Contoh**. Tutup dengan tombol ✕, klik di luar kotak, tombol Esc, atau pindah slide. Berfungsi juga saat layar penuh.
+- **Slide 5** kini berisi nomor, pertanyaan, label media, dan kotak contoh. **Slide 7** memakai kartu tertata (label fokus di atas, judul dan deskripsi sejajar).
+- **Slide 12 (Berbagi Hasil Karya)** memuat contoh penerapan dari ZulfaSpace: *Petualangan Pecahan Season 2* — tujuan, interaksi, hingga asesmen. Contoh ini **rancangan** berdasarkan nama dan fokus karya; sesuaikan dengan fitur aktual di `js/materi.js`.
+- Isi penjelasan dan contoh tiap tombol “i” ada di `js/materi.js` bagian `info`. Itu draf saya; mohon dicocokkan dengan bahan Bimtek Anda.
+- Perbaikan: angka kartu pada slide 5 dan 10 sempat hilang bila halaman dimuat langsung di slide tersebut (bentrok dengan efek hitung-naik dashboard) — sudah diperbaiki.

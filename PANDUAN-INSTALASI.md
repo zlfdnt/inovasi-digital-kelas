@@ -125,3 +125,11 @@ ZIP `inovasi-digital-kelas.zip` sudah berisi `index.html` di **root**. Folder ha
 
 ## N. Pembaruan: Tautan Langsung Keenam Karya
 Pratinjau di slide 7 kini memuat laman asli tiap karya: Petualangan Pecahan Season 2 (`/petualangan_pecahan_seasondua/`), Pseudocraft (`/pseudocraft/`), Pseudocode Lab (`/Pseudocode_Lab/`), Pythagoras Digital (`/PythagorasDigital/`), GeoQuest3D (`/geoquest-3d/`), dan Menjelajahi Dunia Digital dengan Aman (`/dunia-digital-aman/`), semuanya di `zlfdnt.github.io`. Label dan keterangan kartu diambil dari judul/deskripsi tiap laman. Bila suatu karya tidak tampil di jendela pratinjau (tergantung pengaturan laman), gunakan tombol **Buka di tab baru**. Menu **Praktik Baik** juga memiliki tombol **Buka** untuk tiap karya.
+
+## O. Pembaruan: Penjelasan PK Mendetail, TK, dan Konsep Asesmen
+- **PK (slide 4):** popup PK tetap seperti semula, ditambah tombol **“Penjelasan mendetail: strategi, metode, pengelolaan kelas, asesmen”**. Isinya: perbedaan mendasar strategi (rencana besar, menjawab “pendekatan apa dan mengapa”) dan metode (cara konkret, menjawab “bagaimana dijalankan”) dalam bentuk tabel, lalu pengelolaan kelas dan asesmen, dengan contoh Dunia Digital Aman. Ada tombol **Kembali**.
+- **TK (slide 4):** popup TK kini memuat bagian **“Tanpa digitalisasi, apakah bisa?”** beserta contoh versi digital dan non-digital.
+- **Konsep Assessment of, for, and as Learning:** popup baru berisi tabel tiga jenis asesmen (kapan, untuk apa, contoh), kaitannya dengan pengalaman belajar, serta kesesuaiannya dengan asesmen formatif/sumatif. Dibuka dari: tombol oranye **“Asesmen: of · for · as Learning”** di slide 5, popup *Merefleksi* (slide 5), popup *Asesmen* (slide 12), dan popup PK mendetail.
+- **Slide 5:** tiap pengalaman belajar kini diberi label asesmen (Memahami dan Mengaplikasi: *for Learning*; Merefleksi: *as · of Learning*).
+- **Slide 12:** kartu **ASESMEN** kini berisi tiga contoh: for, as, dan of Learning pada media Dunia Digital Aman.
+- Semua teks ada di `js/materi.js` (bagian `info`). Itu draf saya; mohon dicocokkan dengan bahan Bimtek.

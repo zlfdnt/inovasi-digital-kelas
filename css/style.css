@@ -300,3 +300,17 @@ html.nocursor .stg:fullscreen .more,html.nocursor .stg:fullscreen .abt,html.nocu
 
 .sl .pop{max-height:690px}.sl .pop.dense{padding:16px 30px 18px}.sl .pop.dense h3{font-size:24px;margin:4px 0 6px}.sl .pop.dense .pb p{font-size:16px;line-height:1.35}
 .sl .pop.dense .pt2{font-size:14px;margin:4px 0 2px;line-height:1.3}.sl .pop.dense .pt2 th,.sl .pop.dense .pt2 td{padding:3px 8px}.sl .pop.dense .pb.ex{margin-top:6px;padding:6px 14px}.sl .pop.dense .pb.ex p{font-size:15.5px}.sl .pop.dense .pb.ex .pl li{font-size:15px;margin:2px 0}.sl .pop.dense .pfoot{margin-top:8px}
+
+/* ===== v10: kerangka Pembelajaran Mendalam + kesinambungan prinsip dan alur ===== */
+.sl .phh{display:flex;align-items:center;justify-content:space-between;gap:10px}.sl .phh .ph{padding-top:var(--fo,0)}
+.sl .sh span{text-transform:none;letter-spacing:0;font-weight:600;color:#8091a5;margin-left:6px}
+.sl .lk{display:flex;align-items:center;gap:10px;font-size:.78em;font-weight:800;color:#1969BE;letter-spacing:.02em}.sl .lk::before,.sl .lk::after{content:'';flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#9CC3EE)}.sl .lk::after{background:linear-gradient(270deg,transparent,#9CC3EE)}
+.sl .duo .pr{padding:6px 12px 6px 16px}.sl .duo .pr div{display:flex;align-items:baseline;gap:10px}.sl .duo .pr strong{display:inline}.sl .duo .pr small{font-size:.7em}
+.sl .pop.pm{width:990px}.sl .pmg{display:grid;grid-template-columns:440px 1fr;gap:16px;align-items:start;margin:4px 0 8px}
+.sl .fig{margin:0}.sl .fig img{width:100%;display:block;border-radius:12px;border:1px solid #DAE7F2;box-shadow:0 6px 16px #124b8722}.sl .fig figcaption{font-size:12px;line-height:1.3;color:#5F6F80;margin-top:5px}
+.sl .pmr .pb{margin-bottom:4px}.sl .leg{display:grid;gap:5px;margin-top:4px}
+.sl .lgd{display:block;border-left:6px solid #7FB5E8;background:#F3F8FD;border-radius:10px;padding:4px 10px}.sl .lgd.g1{border-color:#1E88C9}.sl .lgd.g2{border-color:#F2C94C}.sl .lgd.g3{border-color:#124B87}
+.sl .lgd b{display:block;font-family:var(--fh);color:#124B87;font-size:14px}.sl .lgd span{font-size:13px;line-height:1.3;color:#2A3542}
+.sl .pop.pm .pb p{font-size:15.5px}.sl .pop.pm .pb b{font-size:12.5px}.sl .pop.pm .pmr .pb p{font-size:16px}.sl .pop.pm .pb.ex .pl li{font-size:14.5px;line-height:1.32}
+.sl .pop.pm .leg{grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 8px}.sl .pop.pm .lgd b{font-size:13.5px}.sl .pop.pm .lgd span{font-size:12.5px}.sl .pop.pm .pmr .pb{margin-bottom:8px}
+.sl .pop.pm{padding:14px 28px 16px}.sl .pop.pm h3{font-size:22px;margin:2px 0 4px}.sl .pop.pm .pb.ex{margin-top:4px;padding:5px 14px}.sl .pop.pm .pb.ex .pl li{font-size:14px;margin:1px 0}.sl .pop.pm .fig figcaption{font-size:11.5px}

@@ -4,6 +4,25 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const safeUrl = u => /^https?:\/\//i.test(u) ? esc(u) : '#';
 const CFG = window.APP_CONFIG || {}, OK = /^https:\/\/script\.google\.com\//.test(CFG.GAS_URL || '') && !/GANTI|XXXX/.test(CFG.GAS_URL);
 const JP = { 1: '08.00 – 09.30', 2: '10.00 – 11.30', 3: '13.00 – 14.30' };
+const SESI_ON = [3], SESI_NM = { 3: 'Digitalisasi Pembelajaran' };   // hanya sesi pemateri ini yang ditampilkan
+// ---------- Efek suara slide (disintesis dengan Web Audio; satu fungsi = satu bunyi yang sama di mana pun) ----------
+const SFX = {
+  ctx: null, on: localStorage.getItem('bk_sfx') !== '0',
+  c() { if (!this.on) return null; if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (this.ctx.state === 'suspended') this.ctx.resume(); return this.ctx; },
+  n(f, t, d, o = {}) { const c = this.ctx, osc = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + t; osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(f, t0); if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t0 + d); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(o.g || .12, t0 + .015); g.gain.exponentialRampToValueAtTime(.0001, t0 + d); osc.connect(g); g.connect(c.destination); osc.start(t0); osc.stop(t0 + d + .03); },
+  play(name) {
+    if (!this.c()) return; const S = {
+      next: () => this.n(420, 0, .15, { to: 680, type: 'triangle' }), prev: () => this.n(680, 0, .15, { to: 420, type: 'triangle' }),
+      open: () => { this.n(660, 0, .07); this.n(990, .07, .11); }, close: () => { this.n(990, 0, .07); this.n(660, .07, .11); },
+      view: () => { this.n(523, 0, .09, { type: 'triangle' }); this.n(659, .08, .09, { type: 'triangle' }); this.n(784, .16, .14, { type: 'triangle' }); },
+      spot: () => this.n(880, 0, .12, { type: 'square', g: .05 }), unspot: () => this.n(440, 0, .12, { type: 'square', g: .05 }),
+      font: () => { this.n(1200, 0, .04, { g: .08 }); this.n(1200, .07, .04, { g: .08 }); },
+      fsin: () => this.n(300, 0, .3, { to: 900, type: 'sawtooth', g: .05 }), fsout: () => this.n(900, 0, .3, { to: 300, type: 'sawtooth', g: .05 }),
+      on: () => { this.n(784, 0, .08); this.n(1047, .08, .12); }
+    }; S[name] && S[name]();
+  },
+  chime(i) { if (!this.c()) return; const P = [523.25, 587.33, 659.25, 783.99, 880]; this.n(P[i % 5] * (1 + Math.floor(i / 5) * .5), .12, .4, { g: .05 }); }   // nada berbeda tiap slide
+};
 let token = localStorage.getItem('bk_t') || '', me = null, S = { sesi: {}, sumber: [] }, view = 'beranda';
 try { me = JSON.parse(localStorage.getItem('bk_m') || 'null'); } catch (e) {}
 if (!token) me = null;
@@ -18,7 +37,7 @@ async function api(action, data) {
 }
 let bootP = null, PRE = {};   // dedupe baca yang sedang berjalan + prefetch rekap
 let bootT = 0;
-function favSync() { window.setFav && setFav(Object.values((S && S.sesi) || {}).some(Boolean)); }
+function favSync() { window.setFav && setFav(SESI_ON.some(n => S && S.sesi && S.sesi[n])); }
 function loadBoot() {
   if (bootP) return bootP;
   if (Date.now() - bootT < 8000 && S.sesi && Object.keys(S.sesi).length) return Promise.resolve(true);   // hindari panggilan berulang
@@ -146,8 +165,10 @@ function infoHTML(k) {
   const dense = !!(d.bagian && d.bagian.some(x => x[2]));
   const one = x => `<div class="pb"><b>${esc(x[0])}</b><p>${hl(x[1])}</p>${x[2] ? tbl(x[2]) : ''}</div>`;
   const sec = d.bagian ? (dense ? d.bagian.filter(x => x[2]).map(one).join('') + `<div class="pcols">${d.bagian.filter(x => !x[2]).map(one).join('')}</div>` : d.bagian.map(one).join('')) : `<div class="pb"><b>Penjelasan</b><p>${hl(d.p)}</p></div>`;
+  const cbox = Array.isArray(d.c) ? `<ul class="pl">${d.c.map(x => `<li><span class="tg">${esc(x[0])}</span> ${hl(x[1])}</li>`).join('')}</ul>` : `<p>${hl(d.c)}</p>`;
+  const hp = ((window.MATERI || {}).halaman || {})[d.hal], pg = hp && hp.url ? `<button class="more pgb" data-pg="${d.hal}">▶ Lihat halaman: ${esc(hp.label)}</button>` : '';
   const ft = (d.balik ? `<button class="more back" data-info="${d.balik}">← Kembali</button>` : '') + (d.lanjut || []).map(x => `<button class="more" data-info="${x[1]}">${esc(x[0])} →</button>`).join('');
-  return `<div class="popw"><div class="pop${d.bagian ? ' long' : ''}${dense ? ' dense' : ''}" role="dialog" aria-label="${esc(d.k)}"><button class="px" aria-label="Tutup">✕</button><span class="pt">${esc(d.tag)}</span><h3>${esc(d.k)}</h3>${sec}<div class="pb ex"><b>Contoh</b><p>${hl(d.c)}</p></div>${ft ? `<div class="pfoot">${ft}</div>` : ''}</div></div>`;
+  return `<div class="popw"><div class="pop${d.bagian ? ' long' : ''}${dense ? ' dense' : ''}" role="dialog" aria-label="${esc(d.k)}"><button class="px" aria-label="Tutup">✕</button><span class="pt">${esc(d.tag)}</span><h3>${esc(d.k)}</h3>${sec}<div class="pb ex"><b>Contoh</b>${cbox}${pg}</div>${ft ? `<div class="pfoot">${ft}</div>` : ''}</div></div>`;
 }
 function previewHTML(list, k) {
   const it = list[k], u = safeUrl(it.url);
@@ -175,7 +196,7 @@ const V = {
       b.classList.toggle('nr', !first); first = false; favSync();
       const ss = S.sesi || {}, L = (S.sumber || []).slice(-3).reverse(), n = (window.MATERI || { slides: [] }).slides.length;
       b.innerHTML = `<div class="bento"><div class="hero b-hero"><div class="slides" data-ms="5500">${HERO.map(h => `<div class="slide ${h[3]}"><h1>${h[0]}</h1><p>${h[1]}</p><span class="em">${ic(h[2])}</span></div>`).join('')}</div>${dots(HERO.length)}<div class="hero-cta"><button class="btn glow" data-go="absen">Mulai Absen</button><button class="btn ghost" data-go="materi">Lihat Materi</button></div></div>
-      <div class="card"><h2>Status Sesi Hari Ini</h2>${[1, 2, 3].map(k => `<div class="sw"><div><b>JP ${k}</b><br><small>${JP[k]} WIB</small></div><span class="pillst ${ss[k] ? 'on' : ''}">${ss[k] ? '● Dibuka' : 'Ditutup'}</span></div>`).join('')}</div></div>
+      <div class="card"><h2>Status Sesi Hari Ini</h2>${SESI_ON.map(k => `<div class="sw"><div><b>Sesi ${k}</b><br><small>${esc(SESI_NM[k])}</small></div><span class="pillst ${ss[k] ? 'on' : ''}">${ss[k] ? '● Dibuka' : 'Ditutup'}</span></div>`).join('')}</div></div>
       <div class="grid" style="margin-bottom:20px">${QA.map(q => `<button class="card qa" data-go="${q[0]}"><span class="tile t${q[3]}">${ic(q[2])}</span><b>${q[1]}</b><small>${q[4]}</small></button>`).join('')}</div>
       <div class="grid g2"><div class="card"><span class="tag">Materi Presentasi</span><h2 style="margin-top:8px">Digitalisasi Pembelajaran</h2><p class="mu">${n} slide · 105 menit · dari penggunaan teknologi menuju pengalaman belajar yang bermakna.</p><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn glow" data-go="materi">Buka Materi</button><button class="btn ghost" data-go="baik">Praktik Baik</button></div></div>
       <div class="card"><h2>Sumber Belajar Terbaru</h2>${L.map(s => `<div class="sw"><div><b>${esc(s.judul)}</b><br><small>${esc(s.jenis)}</small></div><a class="btn ghost sm" href="${safeUrl(s.tautan)}" target="_blank" rel="noopener">Buka</a></div>`).join('') || '<p class="mu">Belum ada sumber.</p>'}</div></div>`;
@@ -187,10 +208,10 @@ const V = {
   },
   async absen(b) {
     await loadBoot();
-    b.innerHTML = `<section class="card"><h2>Pilih Sesi Presensi</h2><div class="jp">${[1, 2, 3].map(n => `<button type="button" class="jpb ${S.sesi[n] ? 'open' : ''}" data-s="${n}" ${S.sesi[n] ? '' : 'disabled'}><b>JP ${n}</b><small>${JP[n]} WIB</small><i>${S.sesi[n] ? '● Dibuka' : 'Ditutup'}</i></button>`).join('')}</div></section>
-    <form id="f" class="card"><h2>Formulir Presensi</h2><input type="hidden" name="sesi">${F.nama}${F.sekolah}${F.mapel}${F.jenjang}${check('Saya menyatakan hadir secara langsung dan mengikuti sesi dengan integritas.')}<button class="btn glow">Kirim Presensi</button></form>`;
-    $$('.jpb.open', b).forEach(x => x.onclick = () => { $$('.jpb', b).forEach(y => y.classList.remove('sel')); x.classList.add('sel'); $('[name=sesi]', b).value = x.dataset.s; });
-    bindForm($('#f', b), 'absen', 'Presensi tercatat.', () => $$('.jpb', b).forEach(y => y.classList.remove('sel')));
+    const n = SESI_ON[0], open = !!(S.sesi || {})[n];
+    b.innerHTML = `<section class="card ses"><div><span class="tag">${ic('check')} Sesi ${n}</span><h2 style="margin:8px 0 2px">${esc(SESI_NM[n])}</h2><p class="mu" style="margin:0">Absensi khusus sesi ini.</p></div><span class="pillst ${open ? 'on' : ''}">${open ? '● Dibuka' : 'Ditutup'}</span></section>
+    <form id="f" class="card"><h2>Formulir Presensi</h2>${open ? '' : '<p class="mu">Absensi belum dibuka oleh panitia. Silakan tunggu hingga sesi dibuka.</p>'}<input type="hidden" name="sesi" value="${n}">${F.nama}${F.sekolah}${F.mapel}${F.jenjang}${check('Saya menyatakan hadir secara langsung dan mengikuti sesi dengan integritas.')}<button class="btn glow"${open ? '' : ' disabled'}>Kirim Presensi</button></form>`;
+    bindForm($('#f', b), 'absen', 'Presensi tercatat.');
   },
   async refleksi(b) {
     b.innerHTML = `<form id="f" class="card"><div class="prog"><i id="pg"></i></div><h2>Refleksi & Tindak Lanjut</h2>${F.nama}${F.sekolah}${area('konsep', '1. Apa konsep/ide utama yang Anda peroleh?')}${area('praktik', '2. Bagaimana penerapan media digital pada materi ajar Anda?', 'Ceritakan pengalaman, tantangan, dan respons peserta didik…')}${area('tindak_lanjut', '3. Apa rencana tindak lanjut Anda?')}<button class="btn glow">Kirim Refleksi</button></form>`;
@@ -236,36 +257,39 @@ const V = {
     // Panggung dibuat SEKALI; pergantian slide hanya mengganti isi kanvas, sehingga layar penuh tidak pernah terlepas.
     const slideTab = () => {
       mv.innerHTML = `<div class="stg" id="stg" data-font="${FONTS[fnt][0]}"><div class="fr" id="fr"><div class="cv" id="cv"></div><button class="nv l" data-d="-1" aria-label="Slide sebelumnya">‹</button><button class="nv r" data-d="1" aria-label="Slide berikutnya">›</button></div>
-      <div class="bar"><button class="bb" data-d="-1" aria-label="Sebelumnya">‹</button><span class="ct" id="ct"></span><div class="pg"><i id="pgi"></i></div><button class="bb" data-d="1" aria-label="Berikutnya">›</button><button class="bb wide" id="fnt"></button><button class="bb wide" id="fs">⛶ Layar penuh</button></div></div>
+      <div class="bar"><button class="bb" data-d="-1" aria-label="Sebelumnya">‹</button><span class="ct" id="ct"></span><div class="pg"><i id="pgi"></i></div><button class="bb" data-d="1" aria-label="Berikutnya">›</button><button class="bb wide" id="snd"></button><button class="bb wide" id="fnt"></button><button class="bb wide" id="fs">⛶ Layar penuh</button></div></div>
       <p class="mu hint">Di ponsel: ketuk “Layar penuh”, lalu putar ke mode lanskap. Geser kiri/kanan atau pakai tombol panah untuk berpindah slide.</p>
       <div id="nts"></div><div class="thumbs">${M.slides.map((x, k) => `<button class="th" data-k="${k}"><b>${k + 1}</b>${esc(x.judul)}</button>`).join('')}</div>`;
       const stg = $('#stg', mv), fr = $('#fr', mv), cv = $('#cv', mv); let hide = 0;
       const fit = () => cv.style.setProperty('--s', fr.clientWidth / 1280);
       new ResizeObserver(fit).observe(fr); fit();
       const fntLabel = () => { $('#fnt', mv).textContent = 'Aa · ' + FONTS[fnt][1]; };
-      const cycleFont = () => { fnt = (fnt + 1) % FONTS.length; stg.dataset.font = FONTS[fnt][0]; localStorage.setItem('bk_font', FONTS[fnt][0]); fntLabel(); requestAnimationFrame(() => fitAll(cv)); };
+      const cycleFont = () => { SFX.play('font'); fnt = (fnt + 1) % FONTS.length; stg.dataset.font = FONTS[fnt][0]; localStorage.setItem('bk_font', FONTS[fnt][0]); fntLabel(); requestAnimationFrame(() => fitAll(cv)); };
       const closeInfo = () => $$('.popw', cv).forEach(x => x.remove());
       let cur = null;
-      const openInfo = k => { const sl = cv.firstElementChild; closeInfo(); sl && sl.insertAdjacentHTML('beforeend', infoHTML(k)); };
-      const openPrev = (list, k) => { const sl = cv.firstElementChild; closeInfo(); if (!sl) return; cur = { list, k }; sl.insertAdjacentHTML('beforeend', previewHTML(list, k)); };
+      const openInfo = (k, snd = 'open') => { SFX.play(snd); const sl = cv.firstElementChild; closeInfo(); sl && sl.insertAdjacentHTML('beforeend', infoHTML(k)); };
+      const openPrev = (list, k, quiet) => { const sl = cv.firstElementChild; closeInfo(); if (!sl) return; if (!quiet) SFX.play('view'); cur = { list, k }; sl.insertAdjacentHTML('beforeend', previewHTML(list, k)); };
       cv.addEventListener('click', e => {
-        if (e.target.closest('.px') || e.target.classList.contains('popw')) return closeInfo();
-        const pn = e.target.closest('.pvn'); if (pn && cur) { e.stopPropagation(); return openPrev(cur.list, (cur.k + (+pn.dataset.d) + cur.list.length) % cur.list.length); }
+        if (e.target.closest('.px') || e.target.classList.contains('popw')) { SFX.play('close'); return closeInfo(); }
+        const pn = e.target.closest('.pvn'); if (pn && cur) { e.stopPropagation(); SFX.play(+pn.dataset.d > 0 ? 'next' : 'prev'); return openPrev(cur.list, (cur.k + (+pn.dataset.d) + cur.list.length) % cur.list.length, true); }
+        const pgb = e.target.closest('[data-pg]'); if (pgb) { e.stopPropagation(); const h = ((M.halaman || {})[pgb.dataset.pg]); if (h && h.url) openPrev([{ title: h.label, url: h.url }], 0); return; }
         const pb = e.target.closest('.pvb'); if (pb) { e.stopPropagation(); return openPrev([{ title: pb.dataset.title, url: pb.dataset.url }], 0); }
         const pv = e.target.closest('.pvbtn'); if (pv) { e.stopPropagation(); return openPrev(M.slides[i].items.map(x => ({ title: x.k, url: x.url, note: x.note })), +pv.dataset.pi); }
-        const ibn = e.target.closest('[data-info]'); if (ibn) { e.stopPropagation(); openInfo(ibn.dataset.info); return; }
+        const ibn = e.target.closest('[data-info]'); if (ibn) { e.stopPropagation(); openInfo(ibn.dataset.info, ibn.classList.contains('back') ? 'close' : 'open'); return; }
         if (e.target.closest('.pop,.pvw')) return;
-        const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
-      const show = (k, dir = 1) => {
+        const c = e.target.closest('.cd,.rw'); if (!c || e.target.closest('a')) return; const g = c.parentElement, was = c.classList.contains('on'); SFX.play(was ? 'unspot' : 'spot'); $$('.on', g).forEach(x => x.classList.remove('on')); g.classList.toggle('focus', !was); if (!was) c.classList.add('on'); });   // klik kartu = sorot poin
+      const show = (k, dir = 1, quiet) => {
         i = (k + N) % N; localStorage.setItem('bk_sl', i); const s = M.slides[i];
         cv.innerHTML = slideHTML(s); cv.firstElementChild.classList.add(dir > 0 ? 'an' : 'ap'); fitAll(cv);
+        if (!quiet) { SFX.play(dir > 0 ? 'next' : 'prev'); SFX.chime(i); }
         $('#ct', mv).textContent = `${i + 1} / ${N}`; $('#pgi', mv).style.width = (i + 1) / N * 100 + '%';
         $$('.th', mv).forEach((x, n) => x.classList.toggle('on', n === i));
         $('#nts', mv).innerHTML = me ? `<details class="card nts"><summary>Narasi pemateri — slide ${i + 1}</summary><p>${esc(s.narasi)}</p>${s.catatan ? `<p class="mu"><b>Catatan:</b> ${esc(s.catatan)}</p>` : ''}</details>` : '';
       };
       const step = d => show(i + d, d);
       const isFs = () => document.fullscreenElement === stg || stg.classList.contains('pfs');
-      const upd = () => { $('#fs', mv).textContent = isFs() ? '✕ Keluar layar penuh' : '⛶ Layar penuh'; setTimeout(fit, 50); };
+      let lastFs = false;
+      const upd = () => { const fsNow = isFs(); if (fsNow !== lastFs) { lastFs = fsNow; SFX.play(fsNow ? 'fsin' : 'fsout'); } $('#fs', mv).textContent = isFs() ? '✕ Keluar layar penuh' : '⛶ Layar penuh'; setTimeout(fit, 50); };
       const toggleFs = () => {
         if (isFs()) { stg.classList.remove('pfs'); if (document.fullscreenElement) document.exitFullscreen(); upd(); return; }
         const rq = stg.requestFullscreen || stg.webkitRequestFullscreen;
@@ -274,6 +298,9 @@ const V = {
       $$('[data-d]', mv).forEach(x => x.onclick = () => { step(+x.dataset.d); x.blur(); });
       $('#fs', mv).onclick = e => { toggleFs(); e.currentTarget.blur(); };
       $('#fnt', mv).onclick = e => { cycleFont(); e.currentTarget.blur(); };
+      const sndLabel = () => { $('#snd', mv).textContent = SFX.on ? '♪ Suara: hidup' : '♪ Suara: mati'; };
+      const toggleSnd = () => { SFX.on = !SFX.on; localStorage.setItem('bk_sfx', SFX.on ? '1' : '0'); sndLabel(); if (SFX.on) SFX.play('on'); };
+      $('#snd', mv).onclick = e => { toggleSnd(); e.currentTarget.blur(); };
       $$('.th', mv).forEach(x => x.onclick = () => show(+x.dataset.k, +x.dataset.k >= i ? 1 : -1));
       const wake = () => { stg.classList.add('show'); clearTimeout(hide); hide = setTimeout(() => stg.classList.remove('show'), 2500); };
       ['mousemove', 'touchstart', 'click'].forEach(ev => stg.addEventListener(ev, wake, { passive: true }));
@@ -288,10 +315,11 @@ const V = {
         else if (k === 'Home') { e.preventDefault(); show(0, -1); } else if (k === 'End') { e.preventDefault(); show(N - 1, 1); }
         else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFs(); }
         else if (k === 't' || k === 'T') { e.preventDefault(); cycleFont(); }
-        else if (k === 'Escape' && $('.popw', cv)) { closeInfo(); } else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
+        else if (k === 'm' || k === 'M') { e.preventDefault(); toggleSnd(); }
+        else if (k === 'Escape' && $('.popw', cv)) { SFX.play('close'); closeInfo(); } else if (k === 'Escape' && stg.classList.contains('pfs')) { stg.classList.remove('pfs'); upd(); }
         else return; wake();
       };
-      ctl = show; fntLabel(); show(i, 1); upd();
+      ctl = show; fntLabel(); sndLabel(); show(i, 1, true); upd();
     };
     $$('[data-t]', b).forEach(x => x.onclick = () => { tab = x.dataset.t; paint(); });
     paint();
@@ -313,8 +341,8 @@ const V = {
     const st = d.status, tot = Math.max(d.praktik, 1), C = { Baru: '#F5A23B', Ditinjau: '#3B82F6', Disetujui: '#2EC97A', Revisi: '#EF4444' };
     let a = 0; const cg = Object.keys(C).map(k => { const s = a; a += (st[k] || 0) / tot * 100; return `${C[k]} ${s}% ${a}%`; }).join(',');
     b.innerHTML = `<div class="grid" style="margin-bottom:20px">${[['Total Peserta', d.peserta, 'users', 1], ['Hadir Hari Ini', pct + '%', 'check', 2], ['Refleksi Masuk', d.refleksi, 'chat', 4], ['Lembar Praktik', d.praktik, 'doc', 3]].map(s => `<div class="card stat"><span class="tile t${s[3]}">${ic(s[2])}</span><small class="lb">${s[0]}</small><b data-n="${s[1]}">${s[1]}</b></div>`).join('')}</div>
-    <div class="grid g2"><div class="card"><h2>Tren Kehadiran per Sesi JP</h2><svg viewBox="0 0 360 160" width="100%" role="img" aria-label="Grafik kehadiran"><line x1="30" x2="350" y1="${Y(P * .95)}" y2="${Y(P * .95)}" stroke="#2EC97A" stroke-dasharray="5 4"/><text x="352" y="${Y(P * .95) - 4}" font-size="9" fill="#2EC97A" text-anchor="end">Target 95%</text><polyline class="ln" pathLength="1" points="${pts}" fill="none" stroke="#5B3FD0" stroke-width="3" stroke-linejoin="round"/>${H.map((v, i) => `<circle cx="${X[i]}" cy="${Y(v)}" r="5" fill="#fff" stroke="#5B3FD0" stroke-width="3"/><text x="${X[i]}" y="${Y(v) - 10}" font-size="11" text-anchor="middle" font-weight="700">${v}</text><text x="${X[i]}" y="152" font-size="11" text-anchor="middle" fill="#64748B">JP ${i + 1}</text>`).join('')}</svg></div>
-    <div class="card"><h2>Status Sesi JP</h2>${[1, 2, 3].map(n => `<div class="sw"><div><b>JP ${n}</b> <small>${JP[n]}</small></div><button class="btn sm ${d.sesi[n] ? 'bad' : 'glow'}" data-t="${n}" data-on="${d.sesi[n] ? 0 : 1}">${d.sesi[n] ? 'Tutup Sesi' : 'Buka Sesi'}</button></div>`).join('')}</div></div>
+    <div class="grid g2"><div class="card"><h2>Kehadiran Sesi ${SESI_ON[0]} · ${esc(SESI_NM[SESI_ON[0]])}</h2><div class="big3"><b data-n="${d.hadir[SESI_ON[0]] || 0}">${d.hadir[SESI_ON[0]] || 0}</b><span>dari ${d.peserta} peserta terdaftar</span></div><div class="prog"><i style="width:${Math.min(100, Math.round((d.hadir[SESI_ON[0]] || 0) / P * 100))}%"></i></div><small class="mu">Target kehadiran 95%</small></div>
+    <div class="card"><h2>Status Sesi</h2>${SESI_ON.map(n => `<div class="sw"><div><b>Sesi ${n}</b> <small>${esc(SESI_NM[n])}</small></div><button class="btn sm ${d.sesi[n] ? 'bad' : 'glow'}" data-t="${n}" data-on="${d.sesi[n] ? 0 : 1}">${d.sesi[n] ? 'Tutup Sesi' : 'Buka Sesi'}</button></div>`).join('')}</div></div>
     <div class="grid g2"><div class="card"><h2>Karya Terbaru</h2><div class="tw"><table><tr><th>Guru</th><th>Judul</th><th>Status</th></tr>${d.recent.map(q => `<tr><td>${esc(q.nama)}<br><small>${esc(q.sekolah)}</small></td><td>${esc(q.judul)}</td><td><span class="pill ${esc(q.status)}">${esc(q.status)}</span></td></tr>`).join('') || '<tr><td colspan="3">Belum ada.</td></tr>'}</table></div></div>
     <div class="card"><h2>Status Lembar Praktik</h2><div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="donut" style="background:conic-gradient(${d.praktik ? cg : '#E2E8F0 0 100%'})"></div><div>${Object.keys(C).map(k => `<div class="lg"><i style="background:${C[k]}"></i>${k}: <b>${st[k] || 0}</b></div>`).join('')}</div></div></div></div>`;
     $$('[data-t]', b).forEach(x => x.onclick = async () => { const r = await api('admin.sesi', { sesi: +x.dataset.t, aktif: +x.dataset.on }); toast(r.message, r.success ? 'ok' : 'err'); go('dash'); });

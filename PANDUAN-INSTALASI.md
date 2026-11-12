@@ -133,3 +133,10 @@ Pratinjau di slide 7 kini memuat laman asli tiap karya: Petualangan Pecahan Seas
 - **Slide 5:** tiap pengalaman belajar kini diberi label asesmen (Memahami dan Mengaplikasi: *for Learning*; Merefleksi: *as · of Learning*).
 - **Slide 12:** kartu **ASESMEN** kini berisi tiga contoh: for, as, dan of Learning pada media Dunia Digital Aman.
 - Semua teks ada di `js/materi.js` (bagian `info`). Itu draf saya; mohon dicocokkan dengan bahan Bimtek.
+
+## P. Pembaruan: Tautan Halaman Contoh, Pendekatan–Strategi–Metode, Suara, Asesmen Detail, Absensi Sesi 3
+- **Tautan halaman contoh:** setiap popup contoh kini dapat memiliki tombol ungu **“Lihat halaman: …”** yang membuka *halaman spesifik* media Dunia Digital Aman (bukan halaman muka) di jendela pratinjau. Tautannya diisi di `js/materi.js` bagian `halaman`: `internet` (cara kerja internet), `data` (keamanan data pribadi), `latihan` (aktivitas memilah data), `kuis` (soal kasus dan refleksi). Selama `url` kosong, tombolnya otomatis tersembunyi. Untuk contoh yang menyangkut media secara keseluruhan (PK, TK, TPACK) dipakai halaman utama media.
+- **Popup PK:** tombol “Penjelasan mendetail” kini membuka **Pendekatan, strategi, dan metode** (tabel perbedaan + banyak contoh), lalu tombol **Berikutnya** menuju **Pengelolaan kelas dan asesmen**.
+- **Asesmen:** popup konsep **of / for / as Learning** diperdalam (pertanyaan kunci, siapa yang aktif, kapan, contoh) dan ada tombol ke popup baru **Diagnostik, formatif, sumatif** yang menjelaskan masing-masing termasuk *of*, *for*, atau *as*.
+- **Suara slide:** efek suara disintesis (tanpa berkas). Satu fungsi = satu bunyi yang sama di mana pun: maju, mundur, buka penjelasan, tutup, pratinjau, sorot kartu, ganti font, masuk/keluar layar penuh. Setiap slide juga punya nada lonceng sendiri (variatif). Tombol **♪ Suara** di bilah slide atau tombol **M** menghidupkan/mematikan (tersimpan). Browser baru berbunyi setelah ada klik atau tombol pertama.
+- **Absensi hanya Sesi 3 · Digitalisasi Pembelajaran:** halaman Absensi, status sesi di Beranda, dan Dashboard admin hanya menampilkan sesi ini. Backend tidak berubah. Jam sesi tidak ditampilkan agar tidak keliru.
